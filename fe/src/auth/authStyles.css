@@ -1,0 +1,176 @@
+/* 🌊 MAIN OCEAN */
+.oceanBackground {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+
+  background: linear-gradient(135deg, #001219, #005f73, #0a9396, #94d2bd);
+  background-size: 300% 300%;
+  animation: oceanFlow 14s ease-in-out infinite;
+}
+
+/* 🌞 LIGHT RAYS (UNDERWATER SUN) */
+.lightRays {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.15), transparent 40%);
+  animation: raysMove 12s ease-in-out infinite;
+}
+
+/* 🫧 BUBBLES */
+.bubble {
+  position: absolute;
+  bottom: -50px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  animation: rise 12s infinite ease-in;
+}
+
+/* ✨ PARTICLES */
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+  animation: drift 10s infinite linear;
+}
+
+/* 🌊 RIPPLE */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 1.2s ease-out;
+  background: rgba(255,255,255,0.3);
+}
+
+/* 🧊 GLASS CARD */
+.glassCard {
+  backdrop-filter: blur(22px);
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 18px;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+  z-index: 2;
+}
+
+/* 🌊 BUTTON */
+.oceanButton {
+  margin-top: 20px;
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+}
+
+/* ================= ANIMATIONS ================= */
+
+@keyframes oceanFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes raysMove {
+  0% { transform: translateY(0px); opacity: 0.5; }
+  50% { transform: translateY(40px); opacity: 0.8; }
+  100% { transform: translateY(0px); opacity: 0.5; }
+}
+
+@keyframes rise {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(-120vh) scale(1.2); opacity: 0; }
+}
+
+@keyframes drift {
+  0% { transform: translateY(0); opacity: 0.3; }
+  100% { transform: translateY(-100vh); opacity: 0; }
+}
+
+@keyframes ripple {
+  to { transform: scale(6); opacity: 0; }
+}
+
+
+
+
+.authHeadingStyles{
+    text-align: center;
+    margin-top: 2px;
+}
+
+.formContainerStyles{
+    /* background-color: yellow; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+.fieldContainerStyles{
+    width: 80%;
+    /* background-color: #f0f0f0; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.inputContainerStyles{
+    width: 30%;
+    height: 60px;
+    margin: 5px 0;
+    display: flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content: space-between;
+    
+}
+.selectContainerStyles{
+    width: 30%;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+}
+.fieldStyles{
+    width: 100%;
+
+}
+.errorStyles{
+    color: red;
+    font-size: 0.9rem;
+      font-weight: 500;
+      margin-left: 0;
+      text-align:center;
+      overflow: hidden !important;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.btnContainerStyles{
+    display: flex;
+    /* flex-direction: column; */
+    flex-wrap: wrap;
+    height: 100px;
+    justify-content: space-around;
+    align-items: center;
+    width: 30%;
+    height:180px;
+    min-width: 0;
+    /* background-color: green; */
+}
+
+.btnStyles{
+    width:100%;
+    font-size: clamp(0.55rem, 1vw, 0.875rem);
+    min-width: 0 !important;
+    overflow: hidden !important;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

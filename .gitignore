@@ -1,0 +1,13 @@
+# dependencies
+be/node_modules
+fe/node_modules
+
+# env files
+be/.env
+fe/.env
+
+# build files
+fe/dist
+
+# logs
+*.log
