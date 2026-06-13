@@ -26,7 +26,7 @@ import { setUser } from "./app/apiSlicer";
 import EditProfile from "./pages/account/EditProfile";
 import PublicLayout from "./pages/common/PublicLayout";
 import DashboardList from "./pages/admin/DashboardList";
-import UnAuthorized from "./pages/common/Unauthorized";
+import UnAuthorized from "./pages/common/UnAuthorized";
 import IdlePage from "./pages/admin/IdlePage";
 
 const App = () => {
