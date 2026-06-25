@@ -16,6 +16,29 @@ export const callKeys = {
     USERDASHBOARD:'user',
     DASHBOARD:'dashboard'
 }
+export const createInfoWorkBtnStyles = {
+        color: "#fff",
+        borderColor: "rgba(255,255,255,0.4)",
+        fontWeight: 600,
+        textTransform: "none",
+
+        minWidth: {
+          xs: "100%",
+          sm: "220px",
+          md: "180px",
+        },
+
+        background: "rgba(255,255,255,0.08)",
+        backdropFilter: "blur(8px)",
+
+        "&:hover": {
+          borderColor: "#fff",
+          background: "rgba(255,255,255,0.18)",
+          transform: "translateY(-2px)",
+        },
+
+        transition: "all 0.3s ease",
+      };
 const CreateInfoWork = () => {
     const [title, setTitle] = useState("");
       const [content, setContent] = useState("");
@@ -30,42 +53,7 @@ const CreateInfoWork = () => {
     setModalType,
     setModalNavigation,
   } = useModal();
-//       const handleSave = async (callKey) => {
-//   try {
-//     const { token } = localUser();
 
-//     const payload = {
-//       title,
-//       content,
-//     };
-
-//     const response = await fetch(
-//       `${BASE_URL}/api/${callKey}/create`,
-//       {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify(payload),
-//       }
-//     );
-
-//     const data = await response.json();
-
-//     if (!response.ok) {
-//       throw new Error(data.message);
-//     }
-
-//     console.log("Saved Successfully", data);
-
-//     setTitle("");
-//     setContent("");
-//   } catch (error) {
-//     console.error(error.message);
-//   }
-// };
-      
   const handleSave= async(callKey)=>{
     const responsiveContent = content.replace(
   /<img([^>]*)>/g,
@@ -122,7 +110,7 @@ const CreateInfoWork = () => {
         setModalType('error');
       }
     }
-    setShowModal(true)
+    setShowModal(true);
     } catch (error) {
       setModalData({title:'Failed',content:error.message});
       setModalType('error');
@@ -143,41 +131,6 @@ function handleReset(){
         onContentChange={setContent}
         height='500px'
     />
-    {/* <Box
-    sx={{
-        // height:'100px',
-        margin:'auto',
-        display:'flex',
-        // flexDirection:'column',
-        flexWrap:'wrap',
-        alignItems:'center',
-        justifyContent:'space-evenly',
-        marginTop:1,
-        backgroundColor:'black'
-      }}
-    >
-      
-        <Button variant="outlined" sx={{color:'white',borderColor:'white'}}
-         onClick={()=>handleSave(callKeys?.INFO)}>
-          Save Information
-        </Button>
-        <Button variant="outlined" sx={{color:'white',borderColor:'white'}}
-         onClick={()=>handleSave(callKeys?.WORK)}>
-          Save Work
-        </Button>
-        <Button variant="outlined" sx={{color:'white',borderColor:'white'}}
-         onClick={()=>handleSave(callKeys?.ADMINDASHBOARD)}>
-          Save Admin Dashboard
-        </Button>
-        <Button variant="outlined" sx={{color:'white',borderColor:'white'}}
-         onClick={()=>handleSave(callKeys?.USERDASHBOARD)}>
-          Save User Dashboard
-        </Button>
-        <Button variant="outlined" sx={{color:'white',borderColor:'white'}}
-         onClick={handleReset}>
-          Reset Editor
-        </Button>
-    </Box> */}
     <Box
   sx={{
     width: "100%",
@@ -235,29 +188,7 @@ function handleReset(){
       key={btn.label}
       variant="outlined"
       onClick={btn.action}
-      sx={{
-        color: "#fff",
-        borderColor: "rgba(255,255,255,0.4)",
-        fontWeight: 600,
-        textTransform: "none",
-
-        minWidth: {
-          xs: "100%",
-          sm: "220px",
-          md: "180px",
-        },
-
-        background: "rgba(255,255,255,0.08)",
-        backdropFilter: "blur(8px)",
-
-        "&:hover": {
-          borderColor: "#fff",
-          background: "rgba(255,255,255,0.18)",
-          transform: "translateY(-2px)",
-        },
-
-        transition: "all 0.3s ease",
-      }}
+      sx={createInfoWorkBtnStyles}
     >
       {btn.label}
     </Button>

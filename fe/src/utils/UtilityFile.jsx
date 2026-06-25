@@ -16,6 +16,8 @@ import SourceIcon from '@mui/icons-material/Source';
 import ListIcon from '@mui/icons-material/List';
 import PageviewIcon from '@mui/icons-material/Pageview';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import TvIcon from '@mui/icons-material/Tv';
 
 export const sidebarContent = [
   {
@@ -41,6 +43,18 @@ export const sidebarContent = [
     title:'Create Data',
     icon:<CreateIcon/>,
     locationToTravel:navigationLocations?.CREATEDATA
+  },
+  {
+    roles:[ROLES.ADMIN],
+    title:'Upload Census Data',
+    icon:<UploadFileIcon/>,
+    locationToTravel:navigationLocations?.UPLOADCSVDATA
+  },
+  {
+    roles:[ROLES.ADMIN,ROLES.USER],
+    title:'Display Census Data',
+    icon:<TvIcon/>,
+    locationToTravel:navigationLocations?.DISPLAYCENSUS
   },
   {
     roles:[ROLES.ADMIN],

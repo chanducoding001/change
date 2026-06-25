@@ -131,6 +131,8 @@ export const navigationLocations = {
   LOGIN:'/login',
   SIGNUP:'/signup',
   CONTRIBUTERS:'/admin/contributers',
+  UPLOADCSVDATA:'/admin/uploadCSVData',
+  DISPLAYCENSUS:'/admin/displayCensus',
   PROFILE:"/app/profile",
   EDITPROFILE:"/app/profile/edit/:id",
   ACCOUNTSETTINGS:"/app/account-settings",

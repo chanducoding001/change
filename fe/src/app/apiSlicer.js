@@ -12,6 +12,11 @@ import {
   deleteInformationApi,
   deleteWorkApi,
   getAllDashboardsApi,
+  getCensusAllStatesApi,
+  getCensusDistrictsByStateApi,
+  getCensusStateApi,
+  getCensusSubDistsByStateDistApi,
+  getCensusVillagesByStateDistSubDistApi,
   getMainDashboardApi,
   getProfileApi,
   getUserMainDashboardApi,
@@ -25,6 +30,20 @@ import {
   updateProfileApi,
 } from "./thunkApiCalls";
 
+const censusStateOptions = [
+  {
+    label: "ANDHRA PRADESH",
+    value: import.meta.env.VITE_AP_STATE_CODE,
+    // value: "ANDHRA PRADESH",
+    State: import.meta.env.VITE_AP_STATE_CODE,
+  },
+];
+const censusSelectedSdsdOptions = {
+  selectedState:{},
+  selectedDist:{},
+  selectedSubDist:{},
+}
+
 const initialState = {
   signUp: requestStates,
   login: requestStates,
@@ -36,6 +55,13 @@ const initialState = {
   setMainDashboard: requestStates,
   getMainDashboard: requestStates,
   getUserMainDashboard: requestStates,
+
+  getCensusAllStates:requestStates,
+  getCensusDistrictsByState:requestStates,
+  getCensusSubDistsByStateDist:requestStates,
+  getCensusVillagesByStateDistSubDist:requestStates,
+
+  getCensusState: requestStates,
 
   getProfile: requestStates,
   updateProfile: requestStates,
@@ -51,12 +77,38 @@ const initialState = {
   updateInformation: requestStates,
   deleteInformation: requestStates,
   userProfile: {},
+  censusDataStateOptions:censusStateOptions,
+  censusSelectedSdsd:censusSelectedSdsdOptions
 };
 
 const apiSlicer = createSlice({
   name: "api slicer",
   initialState,
   reducers: {
+    setSelectedSdsd: (state, action) => {
+  const key = Object.keys(action.payload)[0];
+  const value = action.payload[key];
+
+  state.censusSelectedSdsd[key] = value;
+
+  if (key === "selectedState") {
+    state.getCensusDistrictsByState = requestStates;
+    state.getCensusVillagesByStateDistSubDist = requestStates;
+    state.censusSelectedSdsd.selectedDist = {};
+    state.censusSelectedSdsd.selectedSubDist = {};
+  }
+
+  if (key === "selectedDist") {
+    state.getCensusSubDistsByStateDist = requestStates;
+    state.getCensusVillagesByStateDistSubDist = requestStates;
+    state.censusSelectedSdsd.selectedSubDist = {};
+  }
+},
+    // setSelectedSdsd:(state,action)=>{
+    //   state.censusSelectedSdsd = {
+    //     ...state.censusSelectedSdsd,...action.payload
+    //   }
+    // },
     setUser: (state, action) => {
       state.userProfile = action.payload;
     },
@@ -165,9 +217,21 @@ const apiSlicer = createSlice({
       ).filter((item) => item._id !== id);
     },
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+      immutableCheck: false,
+    }),
   extraReducers: (builder) => {
     handleApiCases(builder, signupApi, "signUp");
     handleApiCases(builder, loginApi, "login");
+
+    handleApiCases(builder, getCensusAllStatesApi, "getCensusAllStates");
+    handleApiCases(builder, getCensusDistrictsByStateApi, "getCensusDistrictsByState");
+    handleApiCases(builder, getCensusSubDistsByStateDistApi, "getCensusSubDistsByStateDist");
+    handleApiCases(builder, getCensusVillagesByStateDistSubDistApi, "getCensusVillagesByStateDistSubDist");
+
+    handleApiCases(builder, getCensusStateApi, "getCensusState");
 
     handleApiCases(builder, createDashboardApi, "createDashboard");
     handleApiCases(builder, getAllDashboardsApi, "getAllDashboards");
@@ -195,6 +259,7 @@ const apiSlicer = createSlice({
 
 export default apiSlicer.reducer;
 export const {
+  setSelectedSdsd,
   setUser,
   removeProfilePhoto,
   pushIntoAllInfo,

@@ -27,7 +27,7 @@ import ContributionFloater from "../../features/ContributionFloater";
 import { Avatar } from "@mui/material";
 import C from "../../cards/C";
 
-const drawerWidth = 240;
+export const drawerWidth = 240;
 
 /* MAIN */
 const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })(

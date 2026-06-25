@@ -9,6 +9,7 @@ const authRoutes = require("./routes/authRoutes");
 const workInfoRoutes = require("./routes/workRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const censusRoutes = require("./routes/censusRoutes");
 
 const verifyToken = require("./middlewares/verifyToken");
 
@@ -85,6 +86,11 @@ app.use(
   process.env.PROFILE_MAIN_URL || "/api/profile",
   verifyToken,
   profileRoutes
+);
+app.use(
+  process.env.CENSUS_MAIN_URL || "/api/census",
+  verifyToken,
+  censusRoutes
 );
 
 app.use(

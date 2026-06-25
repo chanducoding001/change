@@ -28,6 +28,8 @@ import PublicLayout from "./pages/common/PublicLayout";
 import DashboardList from "./pages/admin/DashboardList";
 import UnAuthorized from "./pages/common/UnAuthorized";
 import IdlePage from "./pages/admin/IdlePage";
+import UploadCsvData from "./pages/admin/UploadCsvData";
+import DisplayCensusData from "./pages/common/DisplayCensusData";
 
 const App = () => {
 
@@ -101,6 +103,11 @@ useEffect(() => {
               element={<CreateInfoWork />}
             />
             <Route
+              path={navigationLocations?.UPLOADCSVDATA}
+              element={<UploadCsvData />}
+            />
+            
+            <Route
               path={navigationLocations?.IDLE}
               element={<IdlePage />}
             />
@@ -122,6 +129,10 @@ useEffect(() => {
           <Route
               path={navigationLocations?.USERDASHBOARD}
               element={<UserDashboard />}
+            />
+            <Route
+              path={navigationLocations?.DISPLAYCENSUS}
+              element={<DisplayCensusData />}
             />
             <Route path={navigationLocations?.PROFILE} element={<Profile />} />
             <Route path={navigationLocations?.EDITPROFILE} element={<EditProfile />} />

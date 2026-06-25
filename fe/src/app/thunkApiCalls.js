@@ -30,6 +30,13 @@ export const signupApi = createApiThunk("Sign Up","POST");
 export const loginApi = createApiThunk("Login","POST");
 export const getProfileApi = createApiThunk("Get Profile details","GET");
 
+export const getCensusAllStatesApi = createApiThunk("Get Census all States","GET");
+export const getCensusDistrictsByStateApi = createApiThunk("Get Census all Dists by state","GET");
+export const getCensusSubDistsByStateDistApi = createApiThunk("Get Census all Sub-Dists by state dist","GET");
+export const getCensusVillagesByStateDistSubDistApi = createApiThunk("Get Census all vills by state dist sub-dist","GET");
+
+export const getCensusStateApi = createApiThunk("Get Census state","GET");
+
 export const createDashboardApi = createApiThunk("Create dashboard","POST");
 export const getAllDashboardsApi = createApiThunk("Get All dashboards","GET");
 export const modifyDashboardApi = createApiThunk("Modify dashboard","PUT");
