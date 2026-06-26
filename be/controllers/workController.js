@@ -1,18 +1,24 @@
 const Information = require("../models/Information");
+const PersonalWork = require("../models/PersonalWork");
 const Work = require("../models/Work");
 
 const models = {
   information: Information,
   work: Work,
+  personalWork:PersonalWork
 };
 
 // CREATE
 const createDocument = async (req, res) => {
   try {
     const {  title, content } = req.body;
-    const isWork = req.baseUrl.includes("work");
-    const Model = isWork ? Work : Information;
+    // const isWork = req.baseUrl.includes("work");
+    // const Model = isWork ? Work : Information;
     // const Model = models[type];
+     // Get model type from route
+    const type = req.baseUrl.split("/").pop();
+
+    const Model = models[type];
 
     if (!Model) {
       return res.status(400).json({
@@ -44,8 +50,11 @@ const getAllDocuments = async (req, res) => {
     // const { type } = req.params;
 
     // const Model = models[type];
-    const isWork = req.baseUrl.includes("work");
-    const Model = isWork ? Work : Information;
+    // const isWork = req.baseUrl.includes("work");
+    // const Model = isWork ? Work : Information;
+    const type = req.baseUrl.split("/").pop();
+
+    const Model = models[type];
 
     if (!Model) {
       return res.status(400).json({
@@ -77,8 +86,11 @@ const getDocumentById = async (req, res) => {
     const {  id } = req.params;
 
     // const Model = models[type];
-    const isWork = req.baseUrl.includes("work");
-    const Model = isWork ? Work : Information;
+    // const isWork = req.baseUrl.includes("work");
+    // const Model = isWork ? Work : Information;
+    const type = req.baseUrl.split("/").pop();
+
+    const Model = models[type];
 
     if (!Model) {
       return res.status(400).json({
@@ -114,8 +126,11 @@ const updateDocument = async (req, res) => {
     const { id } = req.params;
 
     // const Model = models[type];
-    const isWork = req.baseUrl.includes("work");
-    const Model = isWork ? Work : Information;
+    // const isWork = req.baseUrl.includes("work");
+    // const Model = isWork ? Work : Information;
+    const type = req.baseUrl.split("/").pop();
+
+    const Model = models[type];
 
     if (!Model) {
       return res.status(400).json({
@@ -151,8 +166,11 @@ const deleteDocument = async (req, res) => {
     const {  id } = req.params;
 
     // const Model = models[type];
-    const isWork = req.baseUrl.includes("work");
-    const Model = isWork ? Work : Information;
+    // const isWork = req.baseUrl.includes("work");
+    // const Model = isWork ? Work : Information;
+    const type = req.baseUrl.split("/").pop();
+
+    const Model = models[type];
 
     if (!Model) {
       return res.status(400).json({

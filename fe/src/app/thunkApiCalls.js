@@ -50,10 +50,17 @@ export const updateProfileApi = createApiThunk("Modify Profile","PUT");
 export const changePasswordApi = createApiThunk("Modify Password","PUT");
 
 export const allUsersApi = createApiThunk("Get all users","GET");
+
 export const createWorkApi = createApiThunk("Create work","POST");
 export const allWorkApi = createApiThunk("Get all works","GET");
 export const modifyWorkApi = createApiThunk("Modify work","PUT");
 export const deleteWorkApi = createApiThunk("Delete work","DELETE");
+
+export const createPersonalWorkApi = createApiThunk("Create personal work","POST");
+export const allPersonalWorkApi = createApiThunk("Get all personal works","GET");
+export const modifyPersonalWorkApi = createApiThunk("Modify personal work","PUT");
+export const deletePersonalWorkApi = createApiThunk("Delete personal work","DELETE");
+
 export const createInformationApi = createApiThunk("Create Information","POST");
 export const allInformationsApi = createApiThunk("Get all Informations","GET");
 export const modifyInformationApi = createApiThunk("Modify Information","PUT");

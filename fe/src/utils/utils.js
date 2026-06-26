@@ -140,6 +140,7 @@ export const navigationLocations = {
   CREATEDATA:"/admin/create-data",
   ALLINFO:"/app/all-info",
   ALLWORKSLIST:"/app/all-works-list",
+  ALLPERSONALWORKSLIST:"/app/all-personal-works-list",
   EACHWORKTHEORY:"/app/each-work-theory"
 };
 export const BASE_URL = "http://localhost:8080";

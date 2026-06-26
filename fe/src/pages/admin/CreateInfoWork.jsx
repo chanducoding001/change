@@ -4,14 +4,15 @@ import ReusableEditorTinyMce from '../../reusables/ReusableEditorTinyMce';
 import { useState } from 'react';
 import { BASE_URL, localUser } from '../../utils/utils';
 import { useDispatch } from 'react-redux';
-import { createDashboardApi, createInformationApi, createWorkApi } from '../../app/thunkApiCalls';
-import { pushIntoAllDashboards, pushIntoAllInfo, pushIntoAllWorks, updateOneInAllWorks } from '../../app/apiSlicer';
+import { createDashboardApi, createInformationApi, createPersonalWorkApi, createWorkApi } from '../../app/thunkApiCalls';
+import { pushIntoAllDashboards, pushIntoAllInfo, pushIntoAllPersonalWorks, pushIntoAllWorks, updateOneInAllWorks } from '../../app/apiSlicer';
 import UniversalModal from '../../features/UniversalModal';
 import useModal from '../../reusables/useModal';
 
 export const callKeys = {
     INFO:'information',
     WORK:'work',
+    PERSONALWORK:'personalWork',
     ADMINDASHBOARD:'admin',
     USERDASHBOARD:'user',
     DASHBOARD:'dashboard'
@@ -93,6 +94,22 @@ const CreateInfoWork = () => {
         setModalData({title:'Failed',content:workResult.payload});
         setModalType('error');
       }
+    }else if(callKey===callKeys.PERSONALWORK){
+      const personalWorkResult = await dispatch(createPersonalWorkApi({
+        url:`${import.meta.env.VITE_CREATE_PERSONAL_WORK}`,
+        data:{title,content:responsiveContent}
+      }));
+      if(createPersonalWorkApi.fulfilled.match(personalWorkResult)){
+        // update store
+        const workPayload = personalWorkResult.payload?.data;
+        dispatch(pushIntoAllPersonalWorks(workPayload));
+        setModalData({title:'Success',content:'Personal Work created successfully!'});
+        setModalType('success');
+        handleReset();
+      }else if(createPersonalWorkApi.rejected.match(personalWorkResult)){
+        setModalData({title:'Failed',content:personalWorkResult.payload});
+        setModalType('error');
+      }
     }else if(callKey===callKeys.ADMINDASHBOARD||callKey===callKeys.USERDASHBOARD){
       const dashboardResult= await dispatch(createDashboardApi({
         url:`${import.meta.env.VITE_DASHBOARD_CRUD}`,
@@ -170,6 +187,10 @@ function handleReset(){
     {
       label: "Save Work",
       action: () => handleSave(callKeys?.WORK),
+    },
+    {
+      label: "Save Personal Work",
+      action: () => handleSave(callKeys?.PERSONALWORK),
     },
     {
       label: "Save Admin Dashboard",

@@ -22,10 +22,12 @@ import { callKeys } from "../pages/admin/CreateInfoWork";
 import {
   deleteOneInAllDashboards,
   deleteOneInAllInfo,
+  deleteOneInAllPersonalWorks,
   deleteOneInAllWorks,
   updateMainDashboard,
   updateOneInAllDashboards,
   updateOneInAllInfo,
+  updateOneInAllPersonalWorks,
   updateOneInAllWorks,
 } from "../app/apiSlicer";
 import useModal from "./useModal";
@@ -178,6 +180,8 @@ const stripHtml = (html = "") => {
         } else if (type === callKeys.WORK) {
           // dispatch update work
           dispatch(updateOneInAllWorks(resultPayload));
+        } else if(type === callKeys.PERSONALWORK){
+          dispatch(updateOneInAllPersonalWorks(resultPayload))
         } else if (type === callKeys.DASHBOARD) {
           // update dashboards
           dispatch(updateOneInAllDashboards(resultPayload));
@@ -215,7 +219,10 @@ const stripHtml = (html = "") => {
           dispatch(deleteOneInAllInfo(id));
         } else if (type === callKeys.WORK) {
           dispatch(deleteOneInAllWorks(id));
-        } else if (type === callKeys.DASHBOARD) {
+        } else if(type === callKeys.PERSONALWORK) {
+          dispatch(deleteOneInAllPersonalWorks(id))
+        }
+        else if (type === callKeys.DASHBOARD) {
           dispatch(deleteOneInAllDashboards(id));
         }
         setParentModalData({

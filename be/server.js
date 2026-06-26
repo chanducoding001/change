@@ -7,11 +7,13 @@ const connectDB = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
 const workInfoRoutes = require("./routes/workRoutes");
+const personalWorkRoutes = require("./routes/personalWorkRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const censusRoutes = require("./routes/censusRoutes");
 
 const verifyToken = require("./middlewares/verifyToken");
+const isAdmin = require("./middlewares/isAdmin");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -80,6 +82,12 @@ app.use(
   process.env.INFORMATION_MAIN_URL || "/api/information",
   verifyToken,
   workInfoRoutes
+);
+app.use(
+  process.env.PERSONAL_WORK_MAIN_URL || "/api/personalWork",
+  verifyToken,
+  isAdmin,
+  personalWorkRoutes
 );
 
 app.use(

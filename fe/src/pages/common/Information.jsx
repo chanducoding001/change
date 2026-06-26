@@ -28,14 +28,44 @@ const Information = () => {
 
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (allInformationsState?.loading === loadingStates?.IDLE) {
-      dispatch(
+  const fetchAllInformation = async () => {
+      try {
+        const result = await dispatch(
         allInformationsApi({
           url: `${import.meta.env.VITE_INFORMATION_GET_PUT_DELETE}`,
           data: [],
         }),
       );
+        if (allInformationsApi.fulfilled.match(result)) {
+          setModalData({
+            title: "Success!",
+            content:
+              result.payload?.data?.length > 0
+                ? "Successfully fetched the Information!"
+                : "Information is not created yet!",
+          });
+          setModalType("success");
+        } else if (allInformationsApi.rejected.match(result)) {
+          setModalData({
+            title: "Failed to fetch Information!",
+            content: result.payload,
+          });
+          setModalType("error");
+        }
+        setShowModal(true);
+      } catch (error) {
+        setModalData({
+          title: "Failed to fetch Information!",
+          content: error.message,
+        });
+        setModalType("error");
+        setShowModal(true);
+      }
+    };
+
+  useEffect(() => {
+    if (allInformationsState?.loading === loadingStates?.IDLE) {
+      fetchAllInformation();
     }
   }, [dispatch]);
 

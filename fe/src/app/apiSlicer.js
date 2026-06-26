@@ -2,14 +2,17 @@ import { createSlice } from "@reduxjs/toolkit";
 import { loadingStates, requestStates, handleApiCases } from "./appUtils";
 import {
   allInformationsApi,
+  allPersonalWorkApi,
   allUsersApi,
   allWorkApi,
   changePasswordApi,
   createDashboardApi,
   createInformationApi,
+  createPersonalWorkApi,
   createWorkApi,
   deleteDashboardApi,
   deleteInformationApi,
+  deletePersonalWorkApi,
   deleteWorkApi,
   getAllDashboardsApi,
   getCensusAllStatesApi,
@@ -23,6 +26,7 @@ import {
   loginApi,
   modifyDashboardApi,
   modifyInformationApi,
+  modifyPersonalWorkApi,
   modifyWorkApi,
   removeCurrentProfilePhotoApi,
   setMainDashboardApi,
@@ -68,15 +72,24 @@ const initialState = {
   removeCurrentProfilePhoto:requestStates,
   changePassword: requestStates,
   allUsers: requestStates,
+
   createWork: requestStates,
   allWorks: requestStates,
   updateWork: requestStates,
   deleteWork: requestStates,
+
+  createPersonalWork: requestStates,
+  allPersonalWorks: requestStates,
+  updatePersonalWork: requestStates,
+  deletePersonalWork: requestStates,
+
   createInformation: requestStates,
   allInformations: requestStates,
   updateInformation: requestStates,
   deleteInformation: requestStates,
+
   userProfile: {},
+
   censusDataStateOptions:censusStateOptions,
   censusSelectedSdsd:censusSelectedSdsdOptions
 };
@@ -133,6 +146,7 @@ const apiSlicer = createSlice({
         state.allInformations.data.data || []
       ).filter((item) => item._id !== id);
     },
+
     pushIntoAllWorks: (state, action) => {
       state.allWorks?.data?.data?.unshift(action.payload);
     },
@@ -145,8 +159,24 @@ const apiSlicer = createSlice({
     },
     deleteOneInAllWorks: (state, action) => {
       const id = action.payload;
-
       state.allWorks.data.data = (state.allWorks.data.data || []).filter(
+        (item) => item._id !== id,
+      );
+    },
+
+    pushIntoAllPersonalWorks: (state, action) => {
+      state.allPersonalWorks?.data?.data?.unshift(action.payload);
+    },
+    updateOneInAllPersonalWorks: (state, action) => {
+      const list = state.allPersonalWorks.data?.data;
+      if (!Array.isArray(list)) return;
+      state.allPersonalWorks.data.data = list.map((item) =>
+        item._id === action.payload._id ? { ...item, ...action.payload } : item,
+      );
+    },
+    deleteOneInAllPersonalWorks: (state, action) => {
+      const id = action.payload;
+      state.allPersonalWorks.data.data = (state.allPersonalWorks.data.data || []).filter(
         (item) => item._id !== id,
       );
     },
@@ -246,10 +276,17 @@ const apiSlicer = createSlice({
     handleApiCases(builder, updateProfileApi, "updateProfile");
     handleApiCases(builder, changePasswordApi, "changePassword");
     handleApiCases(builder, allUsersApi, "allUsers");
+
     handleApiCases(builder, createWorkApi, "createWork");
     handleApiCases(builder, allWorkApi, "allWorks");
     handleApiCases(builder, modifyWorkApi, "updateWork");
     handleApiCases(builder, deleteWorkApi, "deleteWork");
+
+    handleApiCases(builder, createPersonalWorkApi, "createPersonalWork");
+    handleApiCases(builder, allPersonalWorkApi, "allPersonalWorks");
+    handleApiCases(builder, modifyPersonalWorkApi, "updatePersonalWork");
+    handleApiCases(builder, deletePersonalWorkApi, "deletePersonalWork");
+
     handleApiCases(builder, createInformationApi, "createInformation");
     handleApiCases(builder, allInformationsApi, "allInformations");
     handleApiCases(builder, modifyInformationApi, "updateInformation");
@@ -262,12 +299,19 @@ export const {
   setSelectedSdsd,
   setUser,
   removeProfilePhoto,
+
   pushIntoAllInfo,
   updateOneInAllInfo,
   deleteOneInAllInfo,
+
   pushIntoAllWorks,
   updateOneInAllWorks,
   deleteOneInAllWorks,
+  
+  pushIntoAllPersonalWorks,
+  updateOneInAllPersonalWorks,
+  deleteOneInAllPersonalWorks,
+  
   pushIntoAllDashboards,
   updateOneInAllDashboards,
   updateMainDashboard,

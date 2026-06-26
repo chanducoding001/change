@@ -51,6 +51,12 @@ export const sidebarContent = [
     locationToTravel:navigationLocations?.UPLOADCSVDATA
   },
   {
+    roles:[ROLES.ADMIN],
+    title:'Personal Works',
+    icon:<AssuredWorkloadIcon/>,
+    locationToTravel:navigationLocations?.ALLPERSONALWORKSLIST
+  },
+  {
     roles:[ROLES.ADMIN,ROLES.USER],
     title:'Display Census Data',
     icon:<TvIcon/>,

@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  allWorkApi,
-  deleteWorkApi,
-  modifyWorkApi,
+  allPersonalWorkApi,
+  modifyPersonalWorkApi,
+  deletePersonalWorkApi,
 } from "../../app/thunkApiCalls";
 import { data } from "react-router-dom";
 import ReusableStackAccordion from "../../reusables/ReusableStackAccordion";
@@ -12,7 +12,7 @@ import { callKeys } from "../admin/CreateInfoWork";
 import UniversalModal from "../../features/UniversalModal";
 import useModal from "../../reusables/useModal";
 
-const ListOfWorks = () => {
+const ListOfPersonalWorks = () => {
   const {
     showModal,
     modalData,
@@ -22,28 +22,30 @@ const ListOfWorks = () => {
     setModalType,
   } = useModal();
   const dispatch = useDispatch();
-  const allWorksState = useSelector((state) => state.apiSlicer.allWorks);
+  const allPersonalWorksState = useSelector(
+    (state) => state.apiSlicer.allPersonalWorks,
+  );
 
-  const fetchAllWorks = async () => {
+  const fetchAllPersonalWorks = async () => {
     try {
       const result = await dispatch(
-        allWorkApi({
-          url: `${import.meta.env.VITE_WORK_GET_PUT_DELETE}`,
+        allPersonalWorkApi({
+          url: `${import.meta.env.VITE_PERSONAL_WORK_GET_PUT_DELETE}`,
           data: [],
         }),
       );
-      if (allWorkApi.fulfilled.match(result)) {
+      if (allPersonalWorkApi.fulfilled.match(result)) {
         setModalData({
           title: "Success!",
           content:
             result.payload?.data?.length > 0
-              ? "Successfully fetched the Works!"
-              : "Works are not created yet!",
+              ? "Successfully fetched personal Works!"
+              : "Personal works are not created yet!",
         });
         setModalType("success");
-      } else if (allWorkApi.rejected.match(result)) {
+      } else if (allPersonalWorkApi.rejected.match(result)) {
         setModalData({
-          title: "Failed to fetch Works!",
+          title: "Failed to fetch personal Works!",
           content: result.payload,
         });
         setModalType("error");
@@ -51,7 +53,7 @@ const ListOfWorks = () => {
       setShowModal(true);
     } catch (error) {
       setModalData({
-        title: "Failed to fetch Works!",
+        title: "Failed to fetch personal Works!",
         content: error.message,
       });
       setModalType("error");
@@ -59,24 +61,24 @@ const ListOfWorks = () => {
     }
   };
   useEffect(() => {
-    if (allWorksState.loading === loadingStates.IDLE) {
-      fetchAllWorks();
+    if (allPersonalWorksState.loading === loadingStates.IDLE) {
+      fetchAllPersonalWorks();
     }
-  }, [dispatch]);
+  }, []);
   return (
     <>
-      {allWorksState.data?.data?.map((eachWork, index) => (
+      {allPersonalWorksState.data?.data?.map((eachWork, index) => (
         <ReusableStackAccordion
           key={eachWork?._id}
           id={eachWork?._id}
           title={eachWork?.title}
           content={eachWork?.content}
           item={eachWork}
-          type={callKeys.WORK}
-          saveUrl={`${import.meta.env.VITE_WORK_GET_PUT_DELETE}`}
-          deleteUrl={`${import.meta.env.VITE_WORK_GET_PUT_DELETE}`}
-          saveApiReference={modifyWorkApi}
-          deleteApiReference={deleteWorkApi}
+          type={callKeys.PERSONALWORK}
+          saveUrl={`${import.meta.env.VITE_PERSONAL_WORK_GET_PUT_DELETE}`}
+          deleteUrl={`${import.meta.env.VITE_PERSONAL_WORK_GET_PUT_DELETE}`}
+          saveApiReference={modifyPersonalWorkApi}
+          deleteApiReference={deletePersonalWorkApi}
           setParentModalData={setModalData}
           setParentModalType={setModalType}
           setParentShowModal={setShowModal}
@@ -94,4 +96,4 @@ const ListOfWorks = () => {
   );
 };
 
-export default ListOfWorks;
+export default ListOfPersonalWorks;

@@ -17,7 +17,6 @@ import { navigationLocations } from "./utils/utils";
 import ListOfSubscribers from "./pages/admin/ListOfSubscribers";
 import Information from "./pages/common/Information";
 import ListOfWorks from "./pages/common/ListOfWorks";
-import EachWorkTheoryDisplay from "./pages/common/EachWorkTheoryDisplay";
 import CreateInfoWork from "./pages/admin/CreateInfoWork";
 import HomeRedirect from "./routing/HomeRedirect";
 import { useDispatch } from "react-redux";
@@ -30,6 +29,7 @@ import UnAuthorized from "./pages/common/UnAuthorized";
 import IdlePage from "./pages/admin/IdlePage";
 import UploadCsvData from "./pages/admin/UploadCsvData";
 import DisplayCensusData from "./pages/common/DisplayCensusData";
+import ListOfPersonalWorks from "./pages/admin/ListOfPersonalWorks";
 
 const App = () => {
 
@@ -99,6 +99,10 @@ useEffect(() => {
               element={<ListOfSubscribers />}
             />
             <Route
+              path={navigationLocations?.ALLPERSONALWORKSLIST}
+              element={<ListOfPersonalWorks />}
+            />
+            <Route
               path={navigationLocations?.CREATEDATA}
               element={<CreateInfoWork />}
             />
@@ -152,10 +156,7 @@ useEffect(() => {
               path={navigationLocations?.ALLWORKSLIST}
               element={<ListOfWorks />}
             />
-            {/* <Route
-              path={navigationLocations?.EACHWORKTHEORY}
-              element={<EachWorkTheoryDisplay />}
-            /> */}
+            
           </Route>
         </Route>
         <Route
