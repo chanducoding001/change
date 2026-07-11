@@ -378,6 +378,242 @@ const uploadCsvController = async (
   }
 };
 
+const getAllStates = async (req, res) => {
+  try {
+    const states = await StateCensus.find()
+      // .select(
+      //   "stateName stateCode censusData"
+      // )
+      .select("stateName stateCode")
+      .sort({
+        stateName: 1,
+      })
+      .lean();
+
+    const data = states.map((state) => ({
+      label: state.stateName,
+      value: state.stateName,
+      stateCode: state.stateCode,
+      id: state._id,
+      // censusData:
+      //   state.censusData,
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+const getDistrictsByState = async (req, res) => {
+  try {
+    const { stateCode } = req.params;
+
+    const state = await StateCensus.findOne({ stateCode })
+      .select("districts")
+      .lean();
+
+    if (!state) {
+      return res.status(404).json({
+        success: false,
+        message: "State not found",
+      });
+    }
+
+    const data = state.districts.map((district) => ({
+      label: district.name,
+      value: district.name,
+      districtCode: district.districtCode,
+      id: district.districtCode,
+      // censusData:
+      //   district.censusData,
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+const getSubDistrictsByDistrict = async (req, res) => {
+  try {
+    const { stateCode, districtCode } = req.params;
+
+    const state = await StateCensus.findOne({ stateCode })
+      .select("districts")
+      .lean();
+
+    if (!state) {
+      return res.status(404).json({
+        success: false,
+        message: "State not found",
+      });
+    }
+
+    const district = state.districts.find(
+      (d) => d.districtCode === districtCode,
+    );
+
+    if (!district) {
+      return res.status(404).json({
+        success: false,
+        message: "District not found",
+      });
+    }
+
+    const data = district.subDistricts.map((subDistrict) => ({
+      label: subDistrict.name,
+      value: subDistrict.name,
+      subDistrictCode: subDistrict.subDistrictCode,
+      id: subDistrict.subDistrictCode,
+      // censusData:
+      //   subDistrict.censusData,
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+const getVillagesBySubDistrict = async (
+  req,
+  res
+) => {
+  try {
+    const {
+      stateCode,
+      districtCode,
+      subDistrictCode,
+    } = req.params;
+
+    const state =
+      await StateCensus.findOne({
+        stateCode: stateCode.toString(),
+      }).lean();
+
+    if (!state) {
+      return res.status(404).json({
+        success: false,
+        message: "State not found",
+      });
+    }
+
+    const district =
+      state.districts?.find(
+        (d) =>
+          d.districtCode?.toString() ===
+          districtCode.toString()
+      );
+
+    if (!district) {
+      return res.status(404).json({
+        success: false,
+        message: "District not found",
+      });
+    }
+
+    const subDistrict =
+      district.subDistricts?.find(
+        (sd) =>
+          sd.subDistrictCode?.toString() ===
+          subDistrictCode.toString()
+      );
+
+    if (!subDistrict) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "SubDistrict not found",
+      });
+    }
+
+    // const villages =
+    //   (subDistrict.villages || []).map(
+    //     (village) => ({
+    //       label: village.name,
+    //       value: village.name,
+    //       id: village.villageCode,
+    //       villageCode:
+    //         village.villageCode,
+    //       censusData:
+    //         village.censusData || {},
+    //     })
+    //   );
+    const onlyVillages = (subDistrict.villages || []).map((village)=>village.censusData || {});
+    const villages = [state.censusData,district.censusData,subDistrict.censusData,...onlyVillages];
+
+    return res.status(200).json({
+      success: true,
+      count: onlyVillages.length,
+      state: {
+        stateCode:
+          state.stateCode,
+        stateName:
+          state.stateName,
+        censusData:
+          state.censusData,
+      },
+      district: {
+        districtCode:
+          district.districtCode,
+        name: district.name,
+        censusData:
+          district.censusData,
+      },
+      subDistrict: {
+        subDistrictCode:
+          subDistrict.subDistrictCode,
+        name: subDistrict.name,
+        censusData:
+          subDistrict.censusData,
+      },
+      data: villages,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to fetch villages",
+      error: error.message,
+    });
+  }
+};
+
+
+
+module.exports = {
+  uploadCsvController,
+  getAllStates,
+  getDistrictsByState,
+  getSubDistrictsByDistrict,
+  getVillagesBySubDistrict,
+};
+
+
 // const uploadCsvController = async (req, res) => {
 //   let filePath;
 
@@ -778,239 +1014,4 @@ const uploadCsvController = async (
 //     });
 //   }
 // };
-
-const getAllStates = async (req, res) => {
-  try {
-    const states = await StateCensus.find()
-      // .select(
-      //   "stateName stateCode censusData"
-      // )
-      .select("stateName stateCode")
-      .sort({
-        stateName: 1,
-      })
-      .lean();
-
-    const data = states.map((state) => ({
-      label: state.stateName,
-      value: state.stateName,
-      stateCode: state.stateCode,
-      id: state._id,
-      // censusData:
-      //   state.censusData,
-    }));
-
-    res.status(200).json({
-      success: true,
-      count: data.length,
-      data,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
-
-const getDistrictsByState = async (req, res) => {
-  try {
-    const { stateCode } = req.params;
-
-    const state = await StateCensus.findOne({ stateCode })
-      .select("districts")
-      .lean();
-
-    if (!state) {
-      return res.status(404).json({
-        success: false,
-        message: "State not found",
-      });
-    }
-
-    const data = state.districts.map((district) => ({
-      label: district.name,
-      value: district.name,
-      districtCode: district.districtCode,
-      id: district.districtCode,
-      // censusData:
-      //   district.censusData,
-    }));
-
-    res.status(200).json({
-      success: true,
-      count: data.length,
-      data,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
-
-const getSubDistrictsByDistrict = async (req, res) => {
-  try {
-    const { stateCode, districtCode } = req.params;
-
-    const state = await StateCensus.findOne({ stateCode })
-      .select("districts")
-      .lean();
-
-    if (!state) {
-      return res.status(404).json({
-        success: false,
-        message: "State not found",
-      });
-    }
-
-    const district = state.districts.find(
-      (d) => d.districtCode === districtCode,
-    );
-
-    if (!district) {
-      return res.status(404).json({
-        success: false,
-        message: "District not found",
-      });
-    }
-
-    const data = district.subDistricts.map((subDistrict) => ({
-      label: subDistrict.name,
-      value: subDistrict.name,
-      subDistrictCode: subDistrict.subDistrictCode,
-      id: subDistrict.subDistrictCode,
-      // censusData:
-      //   subDistrict.censusData,
-    }));
-
-    res.status(200).json({
-      success: true,
-      count: data.length,
-      data,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
-
-const getVillagesBySubDistrict = async (
-  req,
-  res
-) => {
-  try {
-    const {
-      stateCode,
-      districtCode,
-      subDistrictCode,
-    } = req.params;
-
-    const state =
-      await StateCensus.findOne({
-        stateCode: stateCode.toString(),
-      }).lean();
-
-    if (!state) {
-      return res.status(404).json({
-        success: false,
-        message: "State not found",
-      });
-    }
-
-    const district =
-      state.districts?.find(
-        (d) =>
-          d.districtCode?.toString() ===
-          districtCode.toString()
-      );
-
-    if (!district) {
-      return res.status(404).json({
-        success: false,
-        message: "District not found",
-      });
-    }
-
-    const subDistrict =
-      district.subDistricts?.find(
-        (sd) =>
-          sd.subDistrictCode?.toString() ===
-          subDistrictCode.toString()
-      );
-
-    if (!subDistrict) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "SubDistrict not found",
-      });
-    }
-
-    // const villages =
-    //   (subDistrict.villages || []).map(
-    //     (village) => ({
-    //       label: village.name,
-    //       value: village.name,
-    //       id: village.villageCode,
-    //       villageCode:
-    //         village.villageCode,
-    //       censusData:
-    //         village.censusData || {},
-    //     })
-    //   );
-    const onlyVillages = (subDistrict.villages || []).map((village)=>village.censusData || {});
-    const villages = [state.censusData,district.censusData,subDistrict.censusData,...onlyVillages];
-
-    return res.status(200).json({
-      success: true,
-      count: onlyVillages.length,
-      state: {
-        stateCode:
-          state.stateCode,
-        stateName:
-          state.stateName,
-        censusData:
-          state.censusData,
-      },
-      district: {
-        districtCode:
-          district.districtCode,
-        name: district.name,
-        censusData:
-          district.censusData,
-      },
-      subDistrict: {
-        subDistrictCode:
-          subDistrict.subDistrictCode,
-        name: subDistrict.name,
-        censusData:
-          subDistrict.censusData,
-      },
-      data: villages,
-    });
-  } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Failed to fetch villages",
-      error: error.message,
-    });
-  }
-};
-
-
-
-module.exports = {
-  uploadCsvController,
-  getAllStates,
-  getDistrictsByState,
-  getSubDistrictsByDistrict,
-  getVillagesBySubDistrict,
-};
 

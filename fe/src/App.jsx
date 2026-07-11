@@ -30,6 +30,13 @@ import IdlePage from "./pages/admin/IdlePage";
 import UploadCsvData from "./pages/admin/UploadCsvData";
 import DisplayCensusData from "./pages/common/DisplayCensusData";
 import ListOfPersonalWorks from "./pages/admin/ListOfPersonalWorks";
+import WorldMap from "./pages/admin/GIS/WorldMap";
+import DisplaySDSDVData from "./pages/common/DisplaySDSDVData";
+import CreateTour from "./pages/admin/add_tour/CreateTour";
+import ListOfTours from "./pages/admin/add_tour/ListOfTours";
+import AddPlaceInTour from "./pages/admin/add_tour/AddPlaceInTour";
+import VisitTour from "./pages/admin/add_tour/visitTour/VisitTour";
+// import AddTour from "./pages/admin/GIS_MAP/AddTour";
 
 const App = () => {
 
@@ -93,7 +100,30 @@ useEffect(() => {
               path={navigationLocations?.DASHBOARDLIST}
               element={<DashboardList />}
             />
-            
+            <Route
+              path={navigationLocations?.DISPLAYCENSUS}
+              element={<DisplayCensusData />}
+            />
+            <Route
+              path={navigationLocations?.DISPLAYSTATELGD}
+              element={<DisplaySDSDVData />}
+            />
+            <Route
+              path={navigationLocations?.ADDTOUR}
+              element={<CreateTour />}
+            />
+            <Route
+              path={navigationLocations?.TOURSLIST}
+              element={<ListOfTours />}
+            />
+            <Route
+              path={navigationLocations?.ADDPLACEINTOUR}
+              element={<AddPlaceInTour />}
+            />
+            <Route
+              path={navigationLocations?.VISITTOUR}
+              element={<VisitTour />}
+            />
             <Route
               path={navigationLocations?.CONTRIBUTERS}
               element={<ListOfSubscribers />}
@@ -109,6 +139,10 @@ useEffect(() => {
             <Route
               path={navigationLocations?.UPLOADCSVDATA}
               element={<UploadCsvData />}
+            />
+            <Route
+              path={navigationLocations?.WORLDMAP}
+              element={<WorldMap />}
             />
             
             <Route
@@ -134,10 +168,7 @@ useEffect(() => {
               path={navigationLocations?.USERDASHBOARD}
               element={<UserDashboard />}
             />
-            <Route
-              path={navigationLocations?.DISPLAYCENSUS}
-              element={<DisplayCensusData />}
-            />
+            
             <Route path={navigationLocations?.PROFILE} element={<Profile />} />
             <Route path={navigationLocations?.EDITPROFILE} element={<EditProfile />} />
             <Route

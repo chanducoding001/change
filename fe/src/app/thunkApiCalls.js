@@ -35,7 +35,21 @@ export const getCensusDistrictsByStateApi = createApiThunk("Get Census all Dists
 export const getCensusSubDistsByStateDistApi = createApiThunk("Get Census all Sub-Dists by state dist","GET");
 export const getCensusVillagesByStateDistSubDistApi = createApiThunk("Get Census all vills by state dist sub-dist","GET");
 
+export const getStateLGDAllStatesApi = createApiThunk("Get State LGD all States","GET");
+export const getStateLGDDistrictsByStateApi = createApiThunk("Get State LGD all Dists by state","GET");
+export const getStateLGDSubDistsByStateDistApi = createApiThunk("Get State LGD all Sub-Dists by state dist","GET");
+export const getStateLGDVillagesByStateDistSubDistApi = createApiThunk("Get State LGD all vills by state dist sub-dist","GET");
+
 export const getCensusStateApi = createApiThunk("Get Census state","GET");
+
+export const createTourApi = createApiThunk("Create Tour","POST");
+export const addPlaceInTourApi = createApiThunk("Add Place in Tour","POST");
+export const getAllToursApi = createApiThunk("Get all Tours","GET");
+export const getATourByIdApi = createApiThunk("Get a Tour","GET");
+export const startATourApi = createApiThunk("Start a Tour","PUT");
+export const syncATourApi = createApiThunk("Sync a Tour","PUT");
+export const deleteTourApi = createApiThunk("Delete Tour","DELETE");
+
 
 export const createDashboardApi = createApiThunk("Create dashboard","POST");
 export const getAllDashboardsApi = createApiThunk("Get All dashboards","GET");

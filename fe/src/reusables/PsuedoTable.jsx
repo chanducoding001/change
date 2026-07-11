@@ -1,5 +1,6 @@
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import React, { useEffect, useMemo, useState } from "react";
-
 import Checkbox from "@mui/material/Checkbox";
 import ListItemText from "@mui/material/ListItemText";
 import InputLabel from "@mui/material/InputLabel";
@@ -32,8 +33,20 @@ import autoTable from "jspdf-autotable";
 import { drawerWidth } from "../pages/common/LayoutFile";
 import { useSelector } from "react-redux";
 
-const excludedColumns = ["State", "District", "Subdistt", "Town/Village"];
+const excludedColumns = [
+  "State",
+  "District",
+  "Subdistt",
+  "Town/Village",
+  "id",
+  "village_code",
+  "sub_district_code",
+];
 const defaultSelectedColumns = [
+  "state_name",
+  "district_name",
+  "sub_district_name",
+  "village_name",
   "State",
   "District",
   "Subdistt",
@@ -64,11 +77,14 @@ const formatCellValue = (column, value) => {
   return value;
 };
 
-const PsuedoTable = ({ data = [] }) => {
+const PsuedoTable = (props) => {
+  const { data = [], selectedState, selectedDist, selectedSubDist } = props;
   const [page, setPage] = useState(0);
-  const {selectedState,selectedDist,selectedSubDist} = useSelector((state)=>state.apiSlicer.censusSelectedSdsd);
+  // const {selectedState,selectedDist,selectedSubDist} = useSelector((state)=>state.apiSlicer.censusSelectedSdsd);
   const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [selectedColumns, setSelectedColumns] = useState(defaultSelectedColumns);
+  const [selectedColumns, setSelectedColumns] = useState(
+    defaultSelectedColumns,
+  );
   const [filters, setFilters] = useState([
     {
       field: "",
@@ -85,18 +101,15 @@ const PsuedoTable = ({ data = [] }) => {
     return Object.keys(data[0]);
   }, [data]);
 
-
   useEffect(() => {
-  if (columns.length) {
-    const defaults = defaultSelectedColumns.filter((col) =>
-      columns.includes(col)
-    );
+    if (columns.length) {
+      const defaults = defaultSelectedColumns.filter((col) =>
+        columns.includes(col),
+      );
 
-    setSelectedColumns(
-      defaults.length ? defaults : columns
-    );
-  }
-}, [columns]);
+      setSelectedColumns(defaults.length ? defaults : columns);
+    }
+  }, [columns]);
 
   // useEffect(() => {
   //   if (columns.length) {
@@ -217,70 +230,132 @@ const PsuedoTable = ({ data = [] }) => {
   //////////////////////////////////////////////////
 
   const downloadTable = () => {
-  const doc = new jsPDF("landscape");
-  
-  const query = filters
-    .filter((f) => f.field && f.value)
-    .map((f) => `${f.field} ${f.operator} ${f.value}`)
-    .join(" AND ");
-  const selectedTitle = `${selectedState?.value} - ${selectedDist?.value} - ${selectedSubDist?.value}`
-  const title = `Census Report of ${selectedTitle}`;
-  doc.setProperties({
-    title,
-    subject: "Census Data",
-    author: "Chandrashekar",
-    creator: "Chandrashekar",
-  });
+    const doc = new jsPDF("landscape");
 
-  doc.setFontSize(18);
-  doc.text(title, 10, 10);
+    const query = filters
+      .filter((f) => f.field && f.value)
+      .map((f) => `${f.field} ${f.operator} ${f.value}`)
+      .join(" AND ");
+    const selectedTitle = `${selectedState?.value} - ${selectedDist?.value} - ${selectedSubDist?.value}`;
+    const title = `Census Report of ${selectedTitle}`;
+    doc.setProperties({
+      title,
+      subject: "Census Data",
+      author: "Chandrashekar",
+      creator: "Chandrashekar",
+    });
 
-  doc.setFontSize(11);
-  doc.text(`Query: ${query || "No Filters"}`, 10, 20);
+    doc.setFontSize(18);
+    doc.text(title, 10, 10);
 
-  autoTable(doc, {
-    startY: 30,
-    head: [["S.No", ...selectedColumns]],
-    body: filteredRows.map((row, index) => [
-      index + 1,
-      ...selectedColumns.map((c) => formatCellValue(c, row[c])),
-    ]),
-  });
+    doc.setFontSize(11);
+    doc.text(`Query: ${query || "No Filters"}`, 10, 20);
 
-  doc.save("census-report.pdf");
-};
+    autoTable(doc, {
+      startY: 30,
+      head: [["S.No", ...selectedColumns]],
+      body: filteredRows.map((row, index) => [
+        index + 1,
+        ...selectedColumns.map((c) => formatCellValue(c, row[c])),
+      ]),
+    });
+
+    doc.save("census-report.pdf");
+  };
+
+  ///////////////////////////////////////////////////
+  const downloadExcel = () => {
+    const exportData = filteredRows.map((row, index) => {
+      const obj = {
+        "S.No": index + 1,
+      };
+
+      selectedColumns.forEach((column) => {
+        obj[column] = formatCellValue(column, row[column]);
+      });
+
+      return obj;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Census Report");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+    });
+
+    const selectedTitle = `${selectedState?.value}-${selectedDist?.value}-${selectedSubDist?.value}`;
+
+    saveAs(blob, `${selectedTitle}-census-report.xlsx`);
+  };
+  //////////////////////////////////////////////////
+  const downloadRowExcel = (row, serial) => {
+    const exportData = [
+      Object.fromEntries(
+        Object.entries(row).map(([key, value]) => [
+          key,
+          formatCellValue(key, value),
+        ]),
+      ),
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Village");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+    });
+
+    saveAs(blob, `${row.Name || row.village_name || serial}.xlsx`);
+  };
 
   //////////////////////////////////////////////////
 
- const downloadRow = (row, serial) => {
-  const doc = new jsPDF();
+  const downloadRow = (row, serial) => {
+    const doc = new jsPDF();
 
-  const selectedTitle = `${selectedState?.value} - ${selectedDist?.value} - ${selectedSubDist?.value}`;
-  const title = `Census Report of ${selectedTitle}`;
+    const selectedTitle = `${selectedState?.value} - ${selectedDist?.value} - ${selectedSubDist?.value}`;
+    const title = `Census Report of ${selectedTitle}`;
 
-  doc.setProperties({
-    title,
-    subject: "Census Data",
-    author: "Chandrashekar",
-    creator: "Chandrashekar",
-  });
+    doc.setProperties({
+      title,
+      subject: "Census Data",
+      author: "Chandrashekar",
+      creator: "Chandrashekar",
+    });
 
-  doc.setFontSize(18);
-  doc.text(title, 10, 10);
+    doc.setFontSize(18);
+    doc.text(title, 10, 10);
 
-  autoTable(doc, {
-    startY: 20,
-    body: [
-      // ["S.No", serial],
-      ...Object.entries(row).map(([key, value]) => [
-        key,
-        formatCellValue(key, value),
-      ]),
-    ],
-  });
+    autoTable(doc, {
+      startY: 20,
+      body: [
+        // ["S.No", serial],
+        ...Object.entries(row).map(([key, value]) => [
+          key,
+          formatCellValue(key, value),
+        ]),
+      ],
+    });
 
-  doc.save(`${row.Name || serial}.pdf`);
-};
+    doc.save(`${row.Name || serial}.pdf`);
+  };
 
   //////////////////////////////////////////////////
 
@@ -423,6 +498,11 @@ const PsuedoTable = ({ data = [] }) => {
               Download PDF
             </Button>
           </Grid>
+          <Grid size={3}>
+            <Button variant="contained" color="success" onClick={downloadExcel}>
+              Download Excel
+            </Button>
+          </Grid>
         </Grid>
       </Box>
 
@@ -446,6 +526,7 @@ const PsuedoTable = ({ data = [] }) => {
                 ))}
 
                 <TableCell>PDF</TableCell>
+                <TableCell>Excel</TableCell>
               </TableRow>
             </TableHead>
 
@@ -476,6 +557,15 @@ const PsuedoTable = ({ data = [] }) => {
                         Download
                       </Button>
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        size="small"
+                        color="success"
+                        onClick={() => downloadRowExcel(row, serial)}
+                      >
+                        Download
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -501,4 +591,3 @@ const PsuedoTable = ({ data = [] }) => {
 };
 
 export default PsuedoTable;
-

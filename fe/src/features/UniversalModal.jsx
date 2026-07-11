@@ -56,6 +56,7 @@ const UniversalModal = (props) => {
     modalAction,
     setModalAction,
     deleteFunctionReference,
+    modalType,
     type = "info", // success | error | info
   } = props;
 
@@ -72,9 +73,9 @@ const UniversalModal = (props) => {
   };
 
   const getIcon = () => {
-    if (type === "success")
+    if (modalType === "success")
       return <CheckCircleIcon sx={{ ...iconStyle, color: "#00ffb3" }} />;
-    if (type === "error")
+    if (modalType === "error")
       return <ErrorIcon sx={{ ...iconStyle, color: "#ff4d4d" }} />;
     return <InfoIcon sx={{ ...iconStyle, color: "#4da6ff" }} />;
   };

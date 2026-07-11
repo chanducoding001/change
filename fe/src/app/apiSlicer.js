@@ -22,6 +22,10 @@ import {
   getCensusVillagesByStateDistSubDistApi,
   getMainDashboardApi,
   getProfileApi,
+  getStateLGDAllStatesApi,
+  getStateLGDDistrictsByStateApi,
+  getStateLGDSubDistsByStateDistApi,
+  getStateLGDVillagesByStateDistSubDistApi,
   getUserMainDashboardApi,
   loginApi,
   modifyDashboardApi,
@@ -65,6 +69,11 @@ const initialState = {
   getCensusSubDistsByStateDist:requestStates,
   getCensusVillagesByStateDistSubDist:requestStates,
 
+  getStateLGDAllStates:requestStates,
+  getStateLGDDistrictsByState:requestStates,
+  getStateLGDSubDistsByStateDist:requestStates,
+  getStateLGDVillagesByStateDistSubDist:requestStates,
+
   getCensusState: requestStates,
 
   getProfile: requestStates,
@@ -91,7 +100,8 @@ const initialState = {
   userProfile: {},
 
   censusDataStateOptions:censusStateOptions,
-  censusSelectedSdsd:censusSelectedSdsdOptions
+  censusSelectedSdsd:censusSelectedSdsdOptions,
+  stateLGDSelectedSdsd:censusSelectedSdsdOptions,
 };
 
 const apiSlicer = createSlice({
@@ -99,29 +109,51 @@ const apiSlicer = createSlice({
   initialState,
   reducers: {
     setSelectedSdsd: (state, action) => {
-  const key = Object.keys(action.payload)[0];
-  const value = action.payload[key];
+      const key = Object.keys(action.payload)[0];
+      const value = action.payload[key];
 
-  state.censusSelectedSdsd[key] = value;
+      state.censusSelectedSdsd[key] = value;
 
-  if (key === "selectedState") {
-    state.getCensusDistrictsByState = requestStates;
-    state.getCensusVillagesByStateDistSubDist = requestStates;
-    state.censusSelectedSdsd.selectedDist = {};
-    state.censusSelectedSdsd.selectedSubDist = {};
-  }
+      if (key === "selectedState") {
+        state.getCensusDistrictsByState = requestStates;
+        state.getCensusVillagesByStateDistSubDist = requestStates;
+        state.censusSelectedSdsd.selectedDist = {};
+        state.censusSelectedSdsd.selectedSubDist = {};
+      }
+    
+      if (key === "selectedDist") {
+        state.getCensusSubDistsByStateDist = requestStates;
+        state.getCensusVillagesByStateDistSubDist = requestStates;
+        state.censusSelectedSdsd.selectedSubDist = {};
+      }
+      if (key === "selectedSubDist" ) {
+        state.getCensusVillagesByStateDistSubDist = requestStates;
+      }
+    },
+    setStateLGDSelectedSdsd: (state, action) => {
+      const key = Object.keys(action.payload)[0];
+      const value = action.payload[key];
 
-  if (key === "selectedDist") {
-    state.getCensusSubDistsByStateDist = requestStates;
-    state.getCensusVillagesByStateDistSubDist = requestStates;
-    state.censusSelectedSdsd.selectedSubDist = {};
-  }
-},
-    // setSelectedSdsd:(state,action)=>{
-    //   state.censusSelectedSdsd = {
-    //     ...state.censusSelectedSdsd,...action.payload
-    //   }
-    // },
+      state.stateLGDSelectedSdsd[key] = value;
+
+      if (key === "selectedState") {
+        state.getStateLGDDistrictsByState = requestStates;
+        state.getStateLGDVillagesByStateDistSubDist = requestStates;
+        state.stateLGDSelectedSdsd.selectedDist = {};
+        state.stateLGDSelectedSdsd.selectedSubDist = {};
+      }
+    
+      if (key === "selectedDist") {
+        state.getStateLGDSubDistsByStateDist = requestStates;
+        state.getStateLGDVillagesByStateDistSubDist = requestStates;
+        state.stateLGDSelectedSdsd.selectedSubDist = {};
+      }
+
+      if (key === "selectedSubDist" ) {
+        state.getStateLGDVillagesByStateDistSubDist = requestStates;
+      }
+    },
+    
     setUser: (state, action) => {
       state.userProfile = action.payload;
     },
@@ -260,6 +292,11 @@ const apiSlicer = createSlice({
     handleApiCases(builder, getCensusDistrictsByStateApi, "getCensusDistrictsByState");
     handleApiCases(builder, getCensusSubDistsByStateDistApi, "getCensusSubDistsByStateDist");
     handleApiCases(builder, getCensusVillagesByStateDistSubDistApi, "getCensusVillagesByStateDistSubDist");
+    
+    handleApiCases(builder, getStateLGDAllStatesApi, "getStateLGDAllStates");
+    handleApiCases(builder, getStateLGDDistrictsByStateApi, "getStateLGDDistrictsByState");
+    handleApiCases(builder, getStateLGDSubDistsByStateDistApi, "getStateLGDSubDistsByStateDist");
+    handleApiCases(builder, getStateLGDVillagesByStateDistSubDistApi, "getStateLGDVillagesByStateDistSubDist");
 
     handleApiCases(builder, getCensusStateApi, "getCensusState");
 
@@ -296,6 +333,7 @@ const apiSlicer = createSlice({
 
 export default apiSlicer.reducer;
 export const {
+  setStateLGDSelectedSdsd,
   setSelectedSdsd,
   setUser,
   removeProfilePhoto,

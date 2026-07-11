@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  Stack,
   Paper,
   Typography,
 } from "@mui/material";
@@ -69,7 +70,7 @@ const UploadCsvData = () => {
     setSelectedFile(file);
   };
 
-const handleUpload = async () => {
+const handleUpload = async (uploadType) => {
   if (!selectedFile || loading) return;
 
   try {
@@ -81,7 +82,9 @@ const handleUpload = async () => {
 
     const { data, status } =
       await baseUrlInstance.post(
-        import.meta.env.VITE_CENSUS_URL,
+        uploadType === 'stateCensus'
+          ? import.meta.env.VITE_CENSUS_URL
+          : import.meta.env.VITE_STATELGD_URL,
         formData,
         {
           headers: {
@@ -134,6 +137,19 @@ const handleUpload = async () => {
     setShowModal(true);
   }
 };
+
+const handleDSBVUpload = async () => {};
+
+const uploadButtons = [
+  {
+    label: "Upload State Census CSV",
+    onClick: ()=>handleUpload('stateCensus'),
+  },
+  {
+    label: "Upload State D_SB_V CSV",
+    onClick: ()=>handleUpload('stateDSBV'),
+  },
+];
 
 return (
     <Box
@@ -238,29 +254,39 @@ return (
           </Alert>
         )}
 
-        <Box sx={{ mt: 2 }}>
-          <Button
-            variant="contained"
-            color="success"
-            size="large"
-            disabled={
-              !selectedFile || loading
-            }
-            onClick={handleUpload}
-            startIcon={
-              loading ? (
-                <CircularProgress
-                  size={20}
-                  color="inherit"
-                />
-              ) : null
-            }
-          >
-            {loading
-              ? "Uploading..."
-              : "Upload CSV"}
-          </Button>
-        </Box>
+        <Box sx={{ mt: 3 }}>
+  <Stack direction="row" spacing={2} flexWrap="wrap">
+    {uploadButtons.map((btn, index) => (
+      <Button
+        key={index}
+        variant="contained"
+        color="success"
+        size="medium"
+        onClick={btn.onClick}
+        disabled={!selectedFile || loading}
+        startIcon={
+          loading ? (
+            <CircularProgress size={18} color="inherit" />
+          ) : null
+        }
+        sx={{
+          px: 3,
+          py: 1,
+          minWidth: 220,
+          textTransform: "none",
+          fontWeight: 600,
+          borderRadius: 2,
+          boxShadow: 2,
+          "&:hover": {
+            boxShadow: 4,
+          },
+        }}
+      >
+        {loading ? "Uploading..." : btn.label}
+      </Button>
+    ))}
+  </Stack>
+</Box>
       </Paper>
       <UniversalModal
     showModal={showModal}

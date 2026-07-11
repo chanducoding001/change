@@ -18,6 +18,7 @@ import PageviewIcon from '@mui/icons-material/Pageview';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import TvIcon from '@mui/icons-material/Tv';
+import ExploreIcon from '@mui/icons-material/Explore';
 
 export const sidebarContent = [
   {
@@ -57,10 +58,34 @@ export const sidebarContent = [
     locationToTravel:navigationLocations?.ALLPERSONALWORKSLIST
   },
   {
-    roles:[ROLES.ADMIN,ROLES.USER],
+    roles:[ROLES.ADMIN],
+    title:'World Map',
+    icon:<ExploreIcon/>,
+    locationToTravel:navigationLocations?.WORLDMAP
+  },
+  {
+    roles:[ROLES.ADMIN],
     title:'Display Census Data',
     icon:<TvIcon/>,
     locationToTravel:navigationLocations?.DISPLAYCENSUS
+  },
+  {
+    roles:[ROLES.ADMIN],
+    title:'Display State LGD Data',
+    icon:<TvIcon/>,
+    locationToTravel:navigationLocations?.DISPLAYSTATELGD
+  },
+  {
+    roles:[ROLES.ADMIN],
+    title:'Add Tour',
+    icon:<ExploreIcon/>,
+    locationToTravel:navigationLocations?.ADDTOUR
+  },
+  {
+    roles:[ROLES.ADMIN],
+    title:'List of Tours',
+    icon:<ExploreIcon/>,
+    locationToTravel:navigationLocations?.TOURSLIST
   },
   {
     roles:[ROLES.ADMIN],

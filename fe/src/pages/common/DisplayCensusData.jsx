@@ -346,7 +346,12 @@ const DisplayCensusData = () => {
       {allVillsofSubDist?.length > 0 && (
         // <Box sx={{ marginTop: "10px", width:'100%',overflowX: "auto", }}>
           // <PsuedoTable data={getCensusVillagesByStateDistSubDistData} />
-          <PsuedoTable data={allVillsofSubDist} />
+          <PsuedoTable 
+          data={allVillsofSubDist} 
+          selectedState={selectedState}
+          selectedDist={selectedDist}
+          selectedSubDist={selectedSubDist}
+          />
           // <ReusableTable/>
         // </Box>
       )}

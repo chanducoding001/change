@@ -11,7 +11,8 @@ const personalWorkRoutes = require("./routes/personalWorkRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const censusRoutes = require("./routes/censusRoutes");
-
+const stateLGDRoutes = require("./routes/stateLGDRoutes");
+const tourRoutes = require('./routes/tourRoutes/tourRoutes');
 const verifyToken = require("./middlewares/verifyToken");
 const isAdmin = require("./middlewares/isAdmin");
 
@@ -100,6 +101,12 @@ app.use(
   verifyToken,
   censusRoutes
 );
+app.use(
+  process.env.STATELGD_MAIN_URL || "/api/stateLGD",
+  verifyToken,
+  stateLGDRoutes
+);
+app.use(process.env.TOUR_MAIN_URL,verifyToken,tourRoutes);
 
 app.use(
   process.env.ALL_USERS_MAIN_URL || "/api/users",
