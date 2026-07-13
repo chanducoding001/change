@@ -11,6 +11,9 @@ const {
   buildNavigationRoute,
   getTourNavigationResponse,
   updateVisitedPlaces,
+  getRoute,
+  haversineDistance,
+  normalizeCoordinate,
 } = require("../../services/tourServices/tourNavigationService");
 
 // Services (we'll create these next)
@@ -20,7 +23,13 @@ const {
 const {
   findNearestPlace,
 } = require("../../services/tourServices/nearestPlaceService");
+const reverseGeocode = require("../../services/tourServices/reverseGeoCode");
 
+const tourStates = {
+  PENDING:'pending',
+  RUNNING:'running',
+  COMPLETED:'completed'
+}
 // create tour
 
 const createTour = async (req, res) => {
@@ -127,7 +136,8 @@ const createTour = async (req, res) => {
 
       description: description.trim(),
 
-      status: "pending",
+      status: tourStates.PENDING,
+      // status: "pending",
 
       places: tourPlaces,
 
@@ -409,10 +419,22 @@ const getTourById = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      data: tour,
-    });
+    // return res.status(200).json({
+    //   success: true,
+    //   data: tour,
+    // });
+    const isTourCompleted =
+            tour.places.length > 0 &&
+            tour.places.every(place => place.visited);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                ...tour.toObject(),
+                isTourCompleted,
+            },
+        });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -424,318 +446,286 @@ const getTourById = async (req, res) => {
 /**
  * Start Tour
  */
+
 const startTour = async (req, res) => {
-  try {
-    const { tourId } = req.params;
-    const { latitude, longitude } = req.body;
+    try {
 
-    if (latitude === undefined || longitude === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: "Current latitude and longitude are required.",
-      });
+        const { tourId } = req.params;
+        const { latitude, longitude } = req.body;
+
+        if (latitude == null || longitude == null) {
+            return res.status(400).json({
+                success: false,
+                message: "Current latitude and longitude are required.",
+            });
+        }
+
+        const tour = await Tour.findById(tourId)
+            .populate("places.place");
+
+        if (!tour) {
+            return res.status(404).json({
+                success: false,
+                message: "Tour not found.",
+            });
+        }
+
+        // if (tour.status === "completed") {
+        if (tour.status === tourStates.COMPLETED) {
+            return res.status(400).json({
+                success: false,
+                message: "Tour has already been completed.",
+            });
+        }
+
+        // Reset tour state if restarting
+        tour.places.forEach((place) => {
+            place.visited = false;
+            place.visitedAt = null;
+            place.visitSequence = null;
+        });
+
+        // tour.status = "running";
+        tour.status = tourStates.RUNNING;
+        tour.startedAt = new Date();
+        tour.completedAt = null;
+
+        // Save actual GPS start location
+        const startLocation = await reverseGeocode({
+            latitude,
+            longitude,
+        });
+
+        tour.startLocation = {
+    ...startLocation,
+    latitude,
+    longitude,
+};
+
+        // Reset progress
+        tour.visitedTotalDistanceFromStartLocation = 0;
+        tour.actualTravelledDistance = 0;
+
+        // Used for travelled distance calculation in syncTour
+        tour.lastSyncedLocation = {
+            latitude,
+            longitude,
+        };
+
+        // ---------------------------------------------
+        // Calculate total distance from actual start
+        // ---------------------------------------------
+        let totalDistance = 0;
+
+        let previous = {
+            latitude,
+            longitude,
+        };
+
+        for (const item of tour.places) {
+
+            const current = {
+                latitude: item.place.latitude,
+                longitude: item.place.longitude,
+            };
+
+            const route = await getRoute({
+                startLocation: previous,
+                endLocation: current,
+            });
+
+            item.distanceFromPrevious = route.distance;
+
+            totalDistance += route.distance;
+
+            previous = current;
+        }
+
+        tour.actualTotalDistanceFromStartLocation = totalDistance;
+
+        await tour.save();
+
+        const data = await getTourNavigationResponse({
+            tour,
+            currentLocation: {
+                latitude,
+                longitude,
+            },
+            reroute: true,
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Tour started successfully.",
+            data,
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+
     }
-
-    const tour = await Tour.findById(tourId).populate("places.place");
-
-    if (!tour) {
-      return res.status(404).json({
-        success: false,
-        message: "Tour not found.",
-      });
-    }
-
-    // if (tour.status === "running") {
-    //     return res.status(400).json({
-    //         success: false,
-    //         message: "Tour is already running.",
-    //     });
-    // }
-
-    if (tour.status === "completed") {
-      return res.status(400).json({
-        success: false,
-        message: "Tour has already been completed.",
-      });
-    }
-
-    // Start Tour
-    tour.status = "running";
-
-    tour.startedAt = new Date();
-
-    tour.startLocation = {
-      latitude,
-      longitude,
-    };
-
-    await tour.save();
-
-    // Build Navigation Response
-    const data = await getTourNavigationResponse({
-      tour,
-      currentLocation: {
-        latitude,
-        longitude,
-      },
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Tour started successfully.",
-      data,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };
 
 // sync tour
 
 const syncTour = async (req, res) => {
-  try {
-    const { tourId } = req.params;
-    const { latitude, longitude } = req.body;
 
-    const tour = await Tour.findById(tourId).populate("places.place");
+    try {
 
-    if (!tour) {
-      return res.status(404).json({
-        success: false,
-        message: "Tour not found",
-      });
-    }
+        const { tourId } = req.params;
+        const { latitude, longitude } = req.body;
 
-    if (tour.status !== "running") {
-      return res.status(400).json({
-        success: false,
-        message: "Tour is not running.",
-      });
-    }
+        if (latitude == null || longitude == null) {
 
-    await updateVisitedPlaces({
-      tour,
-      currentLocation: { latitude, longitude },
-    });
+            return res.status(400).json({
+                success: false,
+                message: "Current latitude and longitude are required.",
+            });
 
-    const data = await getTourNavigationResponse({
-      tour,
-      currentLocation: { latitude, longitude },
-    });
+        }
 
-    return res.status(200).json({
-      success: true,
-      message: "Tour synchronized successfully.",
-      data,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
+        const tour = await Tour.findById(tourId)
+            .populate("places.place");
+
+        if (!tour) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Tour not found.",
+            });
+
+        }
+
+        // if (tour.status !== "running") {
+        if (tour.status !== tourStates.RUNNING) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Tour is not running.",
+            });
+
+        }
+
+        const currentLocation = {
+          latitude,
+          longitude
+        }
+/*
+ * --------------------------------------------------
+ * Actual travelled distance (GPS movement)
+ * --------------------------------------------------
+ */
+
+const previousLocation = {
+    latitude: normalizeCoordinate(tour.lastSyncedLocation.latitude),
+    longitude: normalizeCoordinate(tour.lastSyncedLocation.longitude),
 };
 
-// const startTour = async (req, res) => {
-//     try {
-//         const { tourId } = req.params;
-//         const { latitude, longitude } = req.body;
+const current = {
+    latitude: normalizeCoordinate(latitude),
+    longitude: normalizeCoordinate(longitude),
+};
 
-//         if (!latitude || !longitude) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Current latitude and longitude are required.",
-//             });
-//         }
+if (
+    previousLocation.latitude !== current.latitude ||
+    previousLocation.longitude !== current.longitude
+) {
+    const travelledDistance = haversineDistance(
+        previousLocation.latitude,
+        previousLocation.longitude,
+        current.latitude,
+        current.longitude
+    );
+    if(travelledDistance>10){
+      tour.actualTravelledDistance += travelledDistance;
+      tour.lastSyncedLocation = {
+        latitude,
+        longitude,
+    };
+    }
+} 
+else {
+    // First sync after starting the tour
+    tour.lastSyncedLocation = {
+        latitude,
+        longitude,
+    };
+}
+    //     tour.lastSyncedLocation = {
+    //     latitude,
+    //     longitude,
+    // };
+        /*
+         * --------------------------------------------------
+         * Save latest GPS
+         * --------------------------------------------------
+         */
 
-//         const tour = await Tour.findById(tourId).populate(
-//             "places.place"
-//         );
 
-//         if (!tour) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Tour not found",
-//             });
-//         }
+        /*
+         * --------------------------------------------------
+         * Mark visited places
+         * --------------------------------------------------
+         */
 
-//         const navigation =
-//             await buildNavigationRoute({
-//                 tour,
-//                 currentLocation: {
-//                     latitude,
-//                     longitude,
-//                 },
-//             });
+        await updateVisitedPlaces({
+            tour,
+            currentLocation,
+        });
 
-//         tour.status = "running";
+        /*
+         * --------------------------------------------------
+         * Build navigation response
+         * (findNextPlace is called internally)
+         * --------------------------------------------------
+         */
 
-//         await tour.save();
+        const data =
+            await getTourNavigationResponse({
+                tour,
+                currentLocation,
+            });
 
-//         return res.status(200).json({
-//             success: true,
-//             message: "Tour started successfully.",
-//             data: navigation,
-//         });
+        /*
+         * --------------------------------------------------
+         * Save everything
+         * --------------------------------------------------
+         */
 
-//     } catch (error) {
+        await tour.save();
 
-//         return res.status(500).json({
-//             success: false,
-//             message: error.message,
-//         });
+        return res.status(200).json({
 
-//     }
-// };
+            success: true,
 
-// const syncTour = async (req, res) => {
-//     try {
+            message:
+                // tour.status === "completed"
+                tour.status === tourStates.COMPLETED
+                    ? "Tour completed successfully."
+                    : "Tour synchronized successfully.",
 
-//         const { tourId } = req.params;
-//         const { latitude, longitude } = req.body;
+            data,
 
-//         if (
-//             latitude === undefined ||
-//             longitude === undefined
-//         ) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Current latitude and longitude are required.",
-//             });
-//         }
+        });
 
-//         const tour = await Tour.findById(tourId)
-//             .populate("places.place");
+    } catch (error) {
 
-//         if (!tour) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Tour not found.",
-//             });
-//         }
+        return res.status(500).json({
 
-//         if (tour.status !== "running") {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Tour is not running.",
-//             });
-//         }
+            success: false,
 
-//         // -------------------------------
-//         // Update visited places
-//         // -------------------------------
+            message: error.message,
 
-//         let visitSequence =
-//             Math.max(
-//                 0,
-//                 ...tour.places.map(
-//                     (p) => p.visitSequence || 0
-//                 )
-//             );
+        });
 
-//         const VISIT_RADIUS = 100; // meters
+    }
 
-//         for (const place of tour.places) {
+};
 
-//             if (place.visited) continue;
-
-//             const distance =
-//                 getDistanceBetweenCoordinates(
-//                     latitude,
-//                     longitude,
-//                     place.place.latitude,
-//                     place.place.longitude
-//                 );
-
-//             if (distance <= VISIT_RADIUS) {
-
-//                 place.visited = true;
-//                 place.visitedAt = new Date();
-//                 place.visitSequence = ++visitSequence;
-
-//             }
-
-//         }
-
-//         // -------------------------------
-//         // Complete tour if everything visited
-//         // -------------------------------
-
-//         const completed =
-//             tour.places.every(
-//                 (place) => place.visited
-//             );
-
-//         if (completed) {
-
-//             tour.status = "completed";
-//             tour.completedAt = new Date();
-
-//             await tour.save();
-
-//             return res.status(200).json({
-//                 success: true,
-//                 message: "Tour completed successfully.",
-//                 data: {
-//                     status: tour.status,
-//                     completed: true,
-//                     remainingPlaces: [],
-//                 },
-//             });
-
-//         }
-
-//         await tour.save();
-
-//         // -------------------------------
-//         // Remaining places
-//         // -------------------------------
-
-//         const remainingPlaces =
-//             tour.places.filter(
-//                 (place) => !place.visited
-//             );
-
-//         // -------------------------------
-//         // Build navigation
-//         // -------------------------------
-
-//         const navigation =
-//             await buildNavigationRoute({
-//                 currentLocation: {
-//                     latitude,
-//                     longitude,
-//                 },
-//                 places: remainingPlaces,
-//             });
-
-//         return res.status(200).json({
-//             success: true,
-//             message: "Tour synchronized successfully.",
-//             data: {
-//                 status: tour.status,
-//                 completed: false,
-//                 currentLocation: {
-//                     latitude,
-//                     longitude,
-//                 },
-//                 remainingPlaces:
-//                     navigation.remainingPlaces,
-//             },
-//         });
-
-//     } catch (error) {
-
-//         return res.status(500).json({
-//             success: false,
-//             message: error.message,
-//         });
-
-//     }
-// };
 
 /**
  * Pause Tour
@@ -952,26 +942,39 @@ const addPlace = async (req, res) => {
      * Build list for optimization
      */
 
-    const placesToOptimize = [...tour.places.map((item) => item.place), place];
+    // const placesToOptimize = [...tour.places.map((item) => item.place), place];
+    const placesToOptimize = [
+    ...tour.places.map(item => item.place),
+    place,
+];
 
+    // const optimized = await optimizeTour(placesToOptimize);
+
+    // tour.places = optimized.optimizedPlaces.map((place, index) => ({
+    //   place: place._id,
+
+    //   sequence: index + 1,
+
+    //   distanceFromPrevious:
+    //     index === 0 ? 0 : optimized.legs[index - 1].distance,
+
+    //   visited: false,
+
+    //   visitedAt: null,
+    // }));
     const optimized = await optimizeTour(placesToOptimize);
 
-    /**
-     * Replace tour places
-     */
-
-    tour.places = optimized.optimizedPlaces.map((place, index) => ({
-      place: place._id,
-
-      sequence: index + 1,
-
-      distanceFromPrevious:
-        index === 0 ? 0 : optimized.legs[index - 1].distance,
-
-      visited: false,
-
-      visitedAt: null,
-    }));
+tour.places = optimized.optimizedPlaces.map((place, index) => ({
+    place: place._id,
+    sequence: index + 1,
+    distanceFromPrevious:
+        index === 0
+            ? 0
+            : optimized.legs[index - 1].distance,
+    visited: false,
+    visitedAt: null,
+    visitSequence: null,
+}));
 
     tour.totalDistance = optimized.totalDistance;
 
@@ -997,155 +1000,129 @@ const addPlace = async (req, res) => {
   }
 };
 
-// const addPlace = async (req, res) => {
-
-//     try {
-
-//         const { tourId } = req.params;
-//         const { searchQuery } = req.body;
-
-//         const tour = await Tour.findById(tourId);
-
-//         if (!tour) {
-
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Tour not found",
-//             });
-
-//         }
-
-//         const response = await axios.get(
-//             "https://nominatim.openstreetmap.org/search",
-//             {
-//                 params: {
-//                     q: searchQuery,
-//                     format: "jsonv2",
-//                     limit: 1,
-//                 },
-//                 headers: {
-//                     "User-Agent": "GIS-Tour-Optimizer/1.0",
-//                 },
-//             }
-//         );
-
-//         if (!response.data.length) {
-
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Place not found",
-//             });
-
-//         }
-
-//         const place = response.data[0];
-
-//         tour.places.push({
-
-//             searchQuery,
-
-//             name:
-//                 place.display_name.split(",")[0],
-
-//             displayName:
-//                 place.display_name,
-
-//             osmId:
-//                 place.osm_id,
-
-//             latitude:
-//                 Number(place.lat),
-
-//             longitude:
-//                 Number(place.lon),
-
-//             address:
-//                 place.display_name,
-
-//             visited: false,
-
-//             visitedAt: null,
-
-//         });
-
-//         const optimized =
-//             await optimizeTour(
-//                 tour.places
-//             );
-
-//         tour.places =
-//             optimized.places;
-
-//         tour.routes =
-//             optimized.routes;
-
-//         tour.totalDistance =
-//             optimized.totalDistance;
-
-//         tour.totalDuration =
-//             optimized.totalDuration;
-
-//         await tour.save();
-
-//         return res.json({
-//             success: true,
-//             data: tour,
-//         });
-
-//     } catch (error) {
-
-//         return res.status(500).json({
-//             success: false,
-//             message: error.message,
-//         });
-
-//     }
-
-// };
 
 /**
  * Delete Place
  */
 const deletePlace = async (req, res) => {
-  try {
-    const { tourId, placeId } = req.params;
+    try {
 
-    const tour = await Tour.findById(tourId);
+        const { tourId, placeId } = req.params;
 
-    if (!tour) {
-      return res.status(404).json({
-        success: false,
-        message: "Tour not found",
-      });
+        const tour = await Tour.findById(tourId)
+            .populate("places.place");
+
+        if (!tour) {
+            return res.status(404).json({
+                success: false,
+                message: "Tour not found.",
+            });
+        }
+
+        if (tour.status === "completed") {
+            return res.status(400).json({
+                success: false,
+                message: "Completed tour cannot be modified.",
+            });
+        }
+
+        const placeIndex = tour.places.findIndex(
+            item => item._id.toString() === placeId
+        );
+
+        if (placeIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                message: "Place not found in the tour.",
+            });
+        }
+
+        const deletedPlace = tour.places[placeIndex];
+
+        // Remove the place
+        tour.places.splice(placeIndex, 1);
+
+        /*
+         * ----------------------------------------
+         * Pending Tour
+         * Re-optimize remaining places
+         * ----------------------------------------
+         */
+        if (tour.status === "pending") {
+
+            const placesToOptimize = tour.places.map(
+                item => item.place
+            );
+
+            const optimized = await optimizeTour(
+                placesToOptimize
+            );
+
+            tour.places = optimized.optimizedPlaces.map(
+                (place, index) => ({
+                    place: place._id,
+                    sequence: index + 1,
+                    distanceFromPrevious:
+                        index === 0
+                            ? 0
+                            : optimized.legs[index - 1].distance,
+                    visited: false,
+                    visitedAt: null,
+                    visitSequence: null,
+                })
+            );
+
+            tour.totalDistance = optimized.totalDistance;
+            tour.totalDuration = 0; // or optimized.totalDuration if you calculate it
+        }
+
+        /*
+         * ----------------------------------------
+         * Running / Paused Tour
+         * Keep existing order
+         * ----------------------------------------
+         */
+        else {
+
+            if (
+                tour.currentNextPlace &&
+                deletedPlace.place._id.equals(
+                    tour.currentNextPlace
+                )
+            ) {
+                tour.currentNextPlace = null;
+            }
+
+            tour.places.forEach((item, index) => {
+                item.sequence = index + 1;
+            });
+
+        }
+
+        await tour.save();
+
+        const updatedTour = await Tour.findById(tour._id)
+            .populate("places.place");
+
+        return res.status(200).json({
+            success: true,
+            message: "Place deleted successfully.",
+            data: updatedTour,
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+
     }
-
-    tour.places = tour.places.filter(
-      (place) => place._id.toString() !== placeId,
-    );
-
-    const optimized = await optimizeTour(tour.places);
-
-    tour.places = optimized.places;
-
-    tour.routes = optimized.routes;
-
-    tour.totalDistance = optimized.totalDistance;
-
-    tour.totalDuration = optimized.totalDuration;
-
-    await tour.save();
-
-    return res.json({
-      success: true,
-      data: tour,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };
+
+
 
 /**
  * Delete Tour
@@ -1175,6 +1152,63 @@ const deleteTour = async (req, res) => {
   }
 };
 
+// delete unresolved places from tour
+
+const deleteUnresolvedPlace = async (req, res) => {
+    try {
+
+        const { tourId } = req.params;
+        const { searchQuery } = req.body;
+
+        if (!searchQuery?.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Search query is required.",
+            });
+        }
+
+        const tour = await Tour.findById(tourId);
+
+        if (!tour) {
+            return res.status(404).json({
+                success: false,
+                message: "Tour not found.",
+            });
+        }
+
+        const placeIndex = tour.unresolvedPlaces.findIndex(
+            place =>
+                place.searchQuery.toLowerCase().trim() ===
+                searchQuery.toLowerCase().trim()
+        );
+
+        if (placeIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                message: "Unresolved place not found.",
+            });
+        }
+
+        tour.unresolvedPlaces.splice(placeIndex, 1);
+
+        await tour.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Unresolved place deleted successfully.",
+            data: tour.unresolvedPlaces,
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+
+    }
+};
+
 module.exports = {
   createTour,
 
@@ -1201,4 +1235,148 @@ module.exports = {
   deletePlace,
 
   deleteTour,
+
+  deleteUnresolvedPlace
 };
+
+
+
+// const deletePlace = async (req, res) => {
+//     try {
+
+//         const { tourId, placeId } = req.params;
+
+//         const tour = await Tour.findById(tourId)
+//     .populate("places.place");
+
+//         if (!tour) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Tour not found.",
+//             });
+//         }
+
+//         if (tour.status === "completed") {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Completed tour cannot be modified.",
+//             });
+//         }
+
+//         const placeIndex = tour.places.findIndex(
+//             place => place._id.toString() === placeId
+//         );
+
+//         if (placeIndex === -1) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Place not found in the tour.",
+//             });
+//         }
+
+//         const deletedPlace = tour.places[placeIndex];
+
+//         // Remove the place
+//         tour.places.splice(placeIndex, 1);
+
+//         /*
+//          * ----------------------------------------
+//          * Pending Tour
+//          * Re-optimize the tour
+//          * ----------------------------------------
+//          */
+//         if (tour.status === "pending") {
+
+//             const optimized = await optimizeTour(tour.places);
+
+//             tour.places = optimized.places;
+//             tour.totalDistance = optimized.totalDistance;
+//             tour.totalDuration = optimized.totalDuration;
+//         }
+
+//         /*
+//          * ----------------------------------------
+//          * Running / Paused Tour
+//          * Keep existing order
+//          * ----------------------------------------
+//          */
+//         if (
+//             tour.status === "running" ||
+//             tour.status === "paused"
+//         ) {
+
+//             // Reset current target if it was deleted
+//             if (
+//                 tour.currentNextPlace &&
+//                 deletedPlace.place.equals(tour.currentNextPlace)
+//             ) {
+//                 tour.currentNextPlace = null;
+//             }
+
+//             // Re-sequence remaining places
+//             tour.places.forEach((place, index) => {
+//                 place.sequence = index + 1;
+//             });
+//         }
+
+//         await tour.save();
+
+//         return res.status(200).json({
+//             success: true,
+//             message: "Place deleted successfully.",
+//             data: tour,
+//         });
+
+//     } catch (error) {
+//         console.log(error.response?.status);
+//         console.log(error.response?.data);
+//         return res.status(500).json({
+//             success: false,
+//             message: error.message,
+//         });
+
+//     }
+// };
+
+
+
+// const deletePlace = async (req, res) => {
+//   try {
+//     const { tourId, placeId } = req.params;
+
+//     const tour = await Tour.findById(tourId);
+
+//     if (!tour) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Tour not found",
+//       });
+//     }
+
+//     tour.places = tour.places.filter(
+//       (place) => place._id.toString() !== placeId,
+//     );
+
+//     const optimized = await optimizeTour(tour.places);
+
+//     tour.places = optimized.places;
+
+//     tour.routes = optimized.routes;
+
+//     tour.totalDistance = optimized.totalDistance;
+
+//     tour.totalDuration = optimized.totalDuration;
+
+//     await tour.save();
+
+//     return res.json({
+//       success: true,
+//       data: tour,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };

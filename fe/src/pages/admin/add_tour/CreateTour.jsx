@@ -21,6 +21,8 @@ import { inputStyle } from "../../../auth/signUp/SignUp";
 import { createInfoWorkBtnStyles } from "../CreateInfoWork";
 import { useDispatch } from "react-redux";
 import { createTourApi } from "../../../app/thunkApiCalls";
+import useModal from "../../../reusables/useModal";
+import UniversalModal from "../../../features/UniversalModal";
 
 const initialErrors = {
     name: "",
@@ -35,6 +37,14 @@ const CreateTour = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [errors, setErrors] = useState(initialErrors);
   const dispatch = useDispatch();
+  const {
+    showModal,
+    modalData,
+    modalType,
+    setShowModal,
+    setModalData,
+    setModalType,
+  } = useModal();
 
   const validate = () => {
     const newErrors = {
@@ -134,7 +144,7 @@ const CreateTour = () => {
       places,
     };
 
-    console.log("tour", requiredObj);
+    // console.log("tour", requiredObj);
     
     // API Call
     try {
@@ -143,24 +153,54 @@ const CreateTour = () => {
             data:requiredObj
         }));
         if(createTourApi.fulfilled.match(result)){
-            console.log(' fulfilled result',result);
-            
+            // console.log(' fulfilled result',result);
+            setModalData({
+          title:'Create A tour',
+          content:'Tour created successfully!'
+        });
+        setModalType('success');
         handleClear();
 
         }else if(createTourApi.rejected.match(result)){
-            console.log('error',result.payload);
+            // console.log('error',result.payload);
+            setModalData({
+          title:'Create A tour',
+          content:result.payload
+        });
+        setModalType('error');
         }
+        setShowModal(true);
     } catch (error) {
-        console.log('error',error.message);
-        
+        // console.log('error',error.message);
+        setModalData({
+          title:'Create A tour',
+          content:error.message
+        });
+        setModalType('error');
+        setShowModal(true);
     }
   };
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        Import Travel Paths
-      </Typography>
+      <h1 style={{
+        display:'flex',
+        alignItems:'center',
+        justifyContent:'center',
+        color:'white',
+        fontSize:"2rem"
+      }}>
+        Create a Tour
+      </h1>
+      <span style={{
+        display:'flex',
+        alignItems:'center',
+        justifyContent:'center',
+        color:'yellow',
+        // fontSize:"2rem"
+      }}>
+        Upload Excel in Map searchable rows such as village_name sub_district_name district_name state_name
+      </span>
 
       <TextField
         id="outlined-basic"
@@ -285,6 +325,14 @@ const CreateTour = () => {
       }}>
         Add Tour
       </Button>
+      <UniversalModal
+        showModal={showModal}
+        modalData={modalData}
+        modalType={modalType}
+        setModalType={setModalType}
+        setModalData={setModalData}
+        setShowModal={setShowModal}
+      />
     </Box>
   );
 };

@@ -1,266 +1,409 @@
 const axios = require("axios");
-// import getDistanceBetweenCoordinates from "./getDistanceBetweenCoordinates.js";
 
-const OSRM = "https://router.project-osrm.org";
+const OSRM_BASE_URL = process.env.OSRM_BASE_URL || "https://router.project-osrm.org";
 
-// find nearest place
-function calculateDistance(lat1, lon1, lat2, lon2) {
-
-    const R = 6371000;
-
-    const toRad = (deg) =>
-        (deg * Math.PI) / 180;
-
-    const dLat = toRad(lat2 - lat1);
-
-    const dLon = toRad(lon2 - lon1);
-
-    const a =
-        Math.sin(dLat / 2) *
-        Math.sin(dLat / 2) +
-        Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-
-    return (
-        2 *
-        R *
-        Math.atan2(
-            Math.sqrt(a),
-            Math.sqrt(1 - a)
-        )
-    );
+const ROUTE_COLORS = {
+    next: "#2E7D32",
+    remaining: "#F9A825",
+    completed: "#757575",
+};
+function normalizeCoordinate(value) {
+    return Number(value.toFixed(3));
 }
+const getRoute = async ({
+    startLocation,
+    endLocation,
+}) => {
 
-// find nearest neighbour
-function reorderPlaces(
-    currentLocation,
-    places
-) {
+    const coordinates = [
+        `${startLocation.longitude},${startLocation.latitude}`,
+        `${endLocation.longitude},${endLocation.latitude}`,
+    ].join(";");
 
-    const remaining = [...places];
+    const url =
+        `${OSRM_BASE_URL}/route/v1/driving/${coordinates}` +
+        "?overview=full" +
+        "&geometries=geojson" +
+        "&steps=true";
 
-    const ordered = [];
+    const { data } = await axios.get(url);
 
-    let current = currentLocation;
-
-    while (remaining.length) {
-
-        let nearestIndex = 0;
-
-        let nearestDistance = Infinity;
-
-        remaining.forEach((place, index) => {
-
-            const d = calculateDistance(
-                current.latitude,
-                current.longitude,
-                place.place.latitude,
-                place.place.longitude
-            );
-
-            if (d < nearestDistance) {
-
-                nearestDistance = d;
-
-                nearestIndex = index;
-
-            }
-
-        });
-
-        const nearest =
-            remaining.splice(
-                nearestIndex,
-                1
-            )[0];
-
-        ordered.push(nearest);
-
-        current = {
-            latitude:
-                nearest.place.latitude,
-            longitude:
-                nearest.place.longitude,
-        };
-
+    if (
+        !data.routes ||
+        data.routes.length === 0
+    ) {
+        throw new Error("Unable to calculate route.");
     }
 
-    return ordered;
+    const route = data.routes[0];
 
-}
+    return {
+        distance: route.distance,      // meters
+        duration: route.duration,      // seconds
+        geometry: route.geometry,
+        legs: route.legs,
+    };
+};
 
-const getDistanceBetweenCoordinates = (
+const mapTourPlace = (tourPlace) => ({
+    _id: tourPlace._id,
+
+    sequence: tourPlace.sequence,
+
+    visitSequence: tourPlace.visitSequence,
+
+    visited: tourPlace.visited,
+
+    visitedAt: tourPlace.visitedAt,
+
+    distanceFromPrevious: tourPlace.distanceFromPrevious,
+
+    place: {
+        _id: tourPlace.place._id,
+        searchQuery: tourPlace.place.searchQuery,
+        name: tourPlace.place.name,
+        displayName: tourPlace.place.displayName,
+        latitude: tourPlace.place.latitude,
+        longitude: tourPlace.place.longitude,
+        address: tourPlace.place.address,
+    },
+});
+
+
+// const findNextPlace = async ({
+//     currentLocation,
+//     remainingPlaces,
+// }) => {
+
+//     if (!remainingPlaces.length) {
+//         return null;
+//     }
+
+//     let nearestPlace = null;
+
+//     let shortestDistance = Number.MAX_SAFE_INTEGER;
+
+//     for (const place of remainingPlaces) {
+
+//         const route = await getRoute({
+//             startLocation: currentLocation,
+//             endLocation: {
+//                 latitude: place.place.latitude,
+//                 longitude: place.place.longitude,
+//             },
+//         });
+
+//         if (route.distance < shortestDistance) {
+
+//             shortestDistance = route.distance;
+
+//             nearestPlace = {
+//                 ...place,
+//                 route: {
+//                     distance: route.distance,
+//                     duration: route.duration,
+//                     geometry: route.geometry,
+//                 },
+//             };
+
+//         }
+//     }
+
+//     return nearestPlace;
+
+// };
+
+/**
+ * Returns the distance between two coordinates in meters.
+ *
+ * @param {number} lat1
+ * @param {number} lon1
+ * @param {number} lat2
+ * @param {number} lon2
+ * @returns {number} Distance in meters
+ */
+const haversineDistance = (
     lat1,
     lon1,
     lat2,
     lon2
 ) => {
-    const toRadians = (degrees) => degrees * (Math.PI / 180);
 
     const EARTH_RADIUS = 6371000; // meters
+
+    const toRadians = (degrees) => degrees * (Math.PI / 180);
 
     const dLat = toRadians(lat2 - lat1);
     const dLon = toRadians(lon2 - lon1);
 
     const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.sin(dLat / 2) ** 2 +
         Math.cos(toRadians(lat1)) *
-            Math.cos(toRadians(lat2)) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
+        Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) ** 2;
 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const c = 2 * Math.atan2(
+        Math.sqrt(a),
+        Math.sqrt(1 - a)
+    );
 
-    return EARTH_RADIUS * c; // Distance in meters
+    return Math.round(EARTH_RADIUS * c);
 };
-async function getRouteGeometry(
-    source,
-    destination,
-) {
 
-    const url =
-        `${OSRM}/route/v1/driving/` +
-        `${source.longitude},${source.latitude};` +
-        `${destination.longitude},${destination.latitude}` +
-        `?overview=full&geometries=geojson`;
 
-    const { data } =
-        await axios.get(url);
+const MAX_ROUTE_CANDIDATES = 3;
 
-    const route =
-        data.routes[0];
+// don't reroute unless BOTH conditions are met
+const MIN_DISTANCE_DIFFERENCE = 100; // meters
+const MIN_PERCENT_IMPROVEMENT = 0.20; // 20%
+
+const findNextPlace = async ({
+    tour,
+    currentLocation,
+}) => {
+
+    const remainingPlaces = tour.places.filter(
+        place => !place.visited
+    );
+
+    if (!remainingPlaces.length) {
+        return null;
+    }
+
+    // ---------------------------------------------------
+    // Shortlist nearest places using Haversine
+    // ---------------------------------------------------
+
+    const candidates = remainingPlaces
+        .map(place => ({
+            place,
+            straightDistance: haversineDistance(
+                currentLocation.latitude,
+                currentLocation.longitude,
+                place.place.latitude,
+                place.place.longitude
+            ),
+        }))
+        .sort(
+            (a, b) =>
+                a.straightDistance -
+                b.straightDistance
+        )
+        .slice(0, MAX_ROUTE_CANDIDATES);
+
+    // ---------------------------------------------------
+    // Find nearest by road distance
+    // ---------------------------------------------------
+
+    let nearest = null;
+
+    for (const candidate of candidates) {
+
+        const route = await getRoute({
+            startLocation: currentLocation,
+            endLocation: {
+                latitude: candidate.place.place.latitude,
+                longitude: candidate.place.place.longitude,
+            },
+        });
+
+        if (
+            !nearest ||
+            route.distance < nearest.route.distance
+        ) {
+
+            nearest = {
+                place: candidate.place,
+                route,
+            };
+
+        }
+
+    }
+
+    // ---------------------------------------------------
+    // First navigation target
+    // ---------------------------------------------------
+
+    if (!tour.currentNextPlace) {
+
+        tour.currentNextPlace = nearest.place.place._id;
+
+        return nearest;
+
+    }
+
+    // ---------------------------------------------------
+    // Current target
+    // ---------------------------------------------------
+
+    const currentTarget = remainingPlaces.find(
+        place =>
+            place.place._id.equals(
+                tour.currentNextPlace
+            )
+    );
+
+    if (!currentTarget) {
+
+        tour.currentNextPlace = nearest.place.place._id;
+
+        return nearest;
+
+    }
+
+    // ---------------------------------------------------
+    // Route to current target
+    // ---------------------------------------------------
+
+    const currentRoute = await getRoute({
+        startLocation: currentLocation,
+        endLocation: {
+            latitude: currentTarget.place.latitude,
+            longitude: currentTarget.place.longitude,
+        },
+    });
+
+    // ---------------------------------------------------
+    // Same target
+    // ---------------------------------------------------
+
+    if (
+        currentTarget.place._id.equals(
+            nearest.place.place._id
+        )
+    ) {
+
+        return {
+            place: currentTarget,
+            route: currentRoute,
+        };
+
+    }
+
+    // ---------------------------------------------------
+    // Decide whether to reroute
+    // ---------------------------------------------------
+
+    const distanceDifference =
+        currentRoute.distance -
+        nearest.route.distance;
+
+    const percentImprovement =
+        distanceDifference /
+        currentRoute.distance;
+
+    const shouldSwitch =
+
+        distanceDifference >=
+        MIN_DISTANCE_DIFFERENCE
+
+        &&
+
+        percentImprovement >=
+        MIN_PERCENT_IMPROVEMENT;
+
+    if (shouldSwitch) {
+
+        tour.currentNextPlace =
+            nearest.place.place._id;
+
+        return nearest;
+
+    }
+
+    // ---------------------------------------------------
+    // Continue navigating to current target
+    // ---------------------------------------------------
 
     return {
 
-        geometry:
-            route.geometry,
+        place: currentTarget,
 
-        distance:
-            route.distance,
-
-        duration:
-            route.duration,
+        route: currentRoute,
 
     };
 
-}
-// provide routes from CL
-async function buildNavigationRoute({
-    startLocation,
+};
+
+
+const VISIT_RADIUS = Number(
+    process.env.TOUR_VISIT_RADIUS ?? 50
+);
+
+const updateVisitedPlaces = async ({
+    tour,
     currentLocation,
-    completedPlaces,
-    remainingPlaces,
-}) {
+}) => {
 
-    const places = [];
+    let maxVisitSequence = Math.max(
+        0,
+        ...tour.places.map(
+            place => place.visitSequence || 0
+        )
+    );
 
-    let previousLocation = startLocation;
+    for (const place of tour.places) {
 
-    // -------------------------
-    // Completed Places
-    // -------------------------
+        if (place.visited) {
+            continue;
+        }
 
-    for (const completedPlace of completedPlaces) {
+        const distance = haversineDistance(
+            currentLocation.latitude,
+            currentLocation.longitude,
+            place.place.latitude,
+            place.place.longitude
+        );
 
-        const geometry =
-            await getRouteGeometry(
-                previousLocation,
-                {
-                    latitude: completedPlace.place.latitude,
-                    longitude: completedPlace.place.longitude,
-                }
-            );
+        if (distance > VISIT_RADIUS) {
+            continue;
+        }
 
-        places.push({
+        // -----------------------------
+        // Mark place as visited
+        // -----------------------------
 
-            ...completedPlace.toObject(),
+        place.visited = true;
+        place.visitedAt = new Date();
+        place.visitSequence = ++maxVisitSequence;
 
-            route: {
+        // -----------------------------
+        // Planned distance covered
+        // -----------------------------
 
-                geometry,
+        tour.visitedTotalDistanceFromStartLocation +=
+            place.distanceFromPrevious;
 
-                color: "#4CAF50",
+        // -----------------------------
+        // Current navigation target visited
+        // -----------------------------
 
-                status: "completed",
-
-            },
-
-        });
-
-        previousLocation = {
-            latitude: completedPlace.place.latitude,
-            longitude: completedPlace.place.longitude,
-        };
-
+        if (
+            tour.currentNextPlace &&
+            place.place._id.equals(
+                tour.currentNextPlace
+            )
+        ) {
+            tour.currentNextPlace = null;
+        }
     }
 
-    // -------------------------
-    // Remaining Places
-    // -------------------------
+    // -----------------------------
+    // Complete tour
+    // -----------------------------
 
-    previousLocation =
-        completedPlaces.length
-            ? {
-                latitude:
-                    completedPlaces[
-                        completedPlaces.length - 1
-                    ].place.latitude,
+    const remaining = tour.places.some(
+        place => !place.visited
+    );
 
-                longitude:
-                    completedPlaces[
-                        completedPlaces.length - 1
-                    ].place.longitude,
-            }
-            : currentLocation;
-
-    for (let index = 0; index < remainingPlaces.length; index++) {
-
-        const remainingPlace =
-            remainingPlaces[index];
-
-        const geometry =
-            await getRouteGeometry(
-                previousLocation,
-                {
-                    latitude: remainingPlace.place.latitude,
-                    longitude: remainingPlace.place.longitude,
-                }
-            );
-
-        places.push({
-
-            ...remainingPlace.toObject(),
-
-            route: {
-
-                geometry,
-
-                color:
-                    index === 0
-                        ? "#2196F3"
-                        : "#9E9E9E",
-
-                status:
-                    index === 0
-                        ? "current"
-                        : "pending",
-
-            },
-
-        });
-
-        previousLocation = {
-            latitude: remainingPlace.place.latitude,
-            longitude: remainingPlace.place.longitude,
-        };
-
+    if (!remaining) {
+        tour.status = "completed";
+        tour.completedAt = new Date();
     }
 
-    return places;
-
-}
+    return tour;
+};
 
 
 const getTourNavigationResponse = async ({
@@ -268,50 +411,83 @@ const getTourNavigationResponse = async ({
     currentLocation,
 }) => {
 
-    // -----------------------------
-    // Completed Places
-    // -----------------------------
+    /*
+     * ----------------------------------------
+     * Completed Places
+     * ----------------------------------------
+     */
 
     const completedPlaces = tour.places
         .filter(place => place.visited)
-        .sort((a, b) => a.visitSequence - b.visitSequence);
+        .sort((a, b) => a.visitSequence - b.visitSequence)
+        .map(place => ({
+            ...mapTourPlace(place),
+            routeColor: ROUTE_COLORS.completed,
+            markerColor: ROUTE_COLORS.completed,
+        }));
 
-    // -----------------------------
-    // Remaining Places
-    // -----------------------------
+    /*
+     * ----------------------------------------
+     * Remaining Places
+     * ----------------------------------------
+     */
 
-    const remainingPlaces = tour.places
+    let remainingPlaces = tour.places
         .filter(place => !place.visited)
-        .sort((a, b) => a.sequence - b.sequence);
+        .map(place => ({
+            ...mapTourPlace(place),
+            routeColor: ROUTE_COLORS.remaining,
+            markerColor: ROUTE_COLORS.remaining,
+        }));
 
-    // -----------------------------
-    // Build Route For Every Place
-    // -----------------------------
+    /*
+     * ----------------------------------------
+     * Find Next Place
+     * ----------------------------------------
+     */
 
-    const places =
-        await buildNavigationRoute({
+    const result = await findNextPlace({
+        tour,
+        currentLocation,
+    });
 
-            startLocation: tour.startLocation,
+    let nextPlace = null;
 
-            currentLocation,
+    if (result) {
 
-            completedPlaces,
+        nextPlace = {
+            ...mapTourPlace(result.place),
 
-            remainingPlaces,
+            markerColor: ROUTE_COLORS.next,
 
-        });
+            routeColor: ROUTE_COLORS.next,
 
-    // -----------------------------
-    // Response
-    // -----------------------------
+            route: {
+                distance: result.route.distance,
+                duration: result.route.duration,
+                geometry: result.route.geometry,
+            },
+        };
 
+        // remainingPlaces = remainingPlaces.filter(
+        //     place => !place._id.equals(nextPlace._id)
+        // );
+        remainingPlaces = remainingPlaces.filter(
+    place => String(place._id) !== String(nextPlace._id)
+);
+    }
+
+    /*
+     * ----------------------------------------
+     * Response
+     * ----------------------------------------
+     */
+    const isTourCompleted =
+            tour.places.length > 0 &&
+            tour.places.every(place => place.visited);
+
+        
     return {
-
-        tourId: tour._id,
-
-        name: tour.name,
-
-        description: tour.description,
 
         status: tour.status,
 
@@ -319,163 +495,54 @@ const getTourNavigationResponse = async ({
 
         completedAt: tour.completedAt,
 
+        startLocation: tour.startLocation,
+        isTourCompleted,
+
         currentLocation,
 
-        totalPlaces: tour.places.length,
+        progress: {
 
-        visitedPlaces:
-            completedPlaces.length,
+            totalPlaces: tour.places.length,
 
-        remainingPlaces:
-            remainingPlaces.length,
+            completedPlaces: completedPlaces.length,
 
-        places,
+            remainingPlaces: remainingPlaces.length,
 
+            actualTotalDistanceFromStartLocation:
+                tour.actualTotalDistanceFromStartLocation,
+
+            visitedTotalDistanceFromStartLocation:
+                tour.visitedTotalDistanceFromStartLocation,
+
+            actualTravelledDistance:
+                tour.actualTravelledDistance,
+        },
+
+        places: [
+
+            ...(nextPlace ? [nextPlace] : []),
+
+            ...completedPlaces,
+
+            ...remainingPlaces,
+
+        ],
     };
 
 };
 
 
 
-const updateVisitedPlaces = async ({
-    tour,
-    currentLocation,
-}) => {
-
-    const { latitude, longitude } = currentLocation;
-    const VISIT_RADIUS = 100; // meters
-
-    let visitSequence = Math.max(
-        0,
-        ...tour.places.map(
-            place => place.visitSequence || 0
-        )
-    );
-
-    let updated = false;
-
-    for (const place of tour.places) {
-
-        if (place.visited) continue;
-
-        const distance =
-            getDistanceBetweenCoordinates(
-                latitude,
-                longitude,
-                place.place.latitude,
-                place.place.longitude
-            );
-
-        if (distance <= VISIT_RADIUS) {
-
-            place.visited = true;
-            place.visitedAt = new Date();
-            place.visitSequence = ++visitSequence;
-
-            updated = true;
-        }
-    }
-
-    // Complete the tour if all places are visited
-    if (
-        tour.places.length > 0 &&
-        tour.places.every(place => place.visited)
-    ) {
-        tour.status = "completed";
-        tour.completedAt = new Date();
-        updated = true;
-    }
-
-    if (updated) {
-        await tour.save();
-    }
-
-    return tour;
-};
-
-
-
 
 module.exports = {
-    buildNavigationRoute,
     getTourNavigationResponse,
+    getRoute,
     updateVisitedPlaces,
+    haversineDistance,
+    normalizeCoordinate
 };
 
 
-// async function buildNavigationRoute({
-//     tour,
-//     currentLocation,
-// }) {
-
-//     const remainingPlaces =
-//         tour.places.filter(
-//             (p) => !p.visited
-//         );
-
-//     if (!remainingPlaces.length) {
-
-//         return {
-
-//             route: null,
-
-//             places: [],
-
-//             totalDistance: 0,
-
-//             totalDuration: 0,
-
-//         };
-
-//     }
-
-//     const orderedPlaces =
-//         reorderPlaces(
-//             currentLocation,
-//             remainingPlaces
-//         );
-
-//     const coordinates = [
-
-//         `${currentLocation.longitude},${currentLocation.latitude}`,
-
-//         ...orderedPlaces.map(
-//             (p) =>
-//                 `${p.place.longitude},${p.place.latitude}`
-//         ),
-
-//     ].join(";");
-
-//     const url =
-//         `${OSRM}/route/v1/driving/${coordinates}?overview=full&geometries=geojson`;
-
-//     const { data } =
-//         await axios.get(url);
-
-//     const route =
-//         data.routes[0];
-
-//     return {
-
-//         currentLocation,
-
-//         nextPlace:
-//             orderedPlaces[0],
-
-//         orderedPlaces,
-
-//         totalDistance:
-//             route.distance,
-
-//         totalDuration:
-//             route.duration,
-
-//         geometry:
-//             route.geometry,
-
-//     };
-
-// }
 
 
 // const getTourNavigationResponse = async ({
@@ -483,192 +550,79 @@ module.exports = {
 //     currentLocation,
 // }) => {
 
-//     console.log("tour =", tour);
-//     console.log("places =", tour?.places);
-//     // -----------------------------
-//     // Completed Places
-//     // -----------------------------
-
+//     // const completedPlaces = tour.places
+//     //     .filter(place => place.visited)
+//     //     .sort((a, b) => a.visitSequence - b.visitSequence)
+//     //     .map(mapTourPlace);
 //     const completedPlaces = tour.places
-//         .filter(place => place.visited)
-//         .sort((a, b) => a.visitSequence - b.visitSequence);
+//     .filter(place => place.visited)
+//     .sort((a, b) => a.visitSequence - b.visitSequence)
+//     .map(place => ({
+//         ...mapTourPlace(place),
+//         routeColor: ROUTE_COLORS.completed,
+//         markerColor: ROUTE_COLORS.completed,
+//     }));
 
-//     // -----------------------------
-//     // Remaining Places
-//     // -----------------------------
+//     let remainingPlaces = tour.places
+//     .filter(place => !place.visited)
+//     .map(place => ({
+//         ...mapTourPlace(place),
+//         routeColor: ROUTE_COLORS.remaining,
+//         markerColor: ROUTE_COLORS.remaining,
+//     }));
+//     // const remainingPlaces = tour.places
+//     //     .filter(place => !place.visited)
+//     //     .map(mapTourPlace);
 
-//     const remainingPlaces = tour.places
-//         .filter(place => !place.visited)
-//         .sort((a, b) => a.sequence - b.sequence);
-
-//     // -----------------------------
-//     // Build Completed Route
-//     // -----------------------------
-
-//     const completedCoordinates = [];
-
-//     if (tour.startLocation) {
-
-//         completedCoordinates.push([
-//             tour.startLocation.longitude,
-//             tour.startLocation.latitude,
-//         ]);
-
-//     }
-
-//     completedPlaces.forEach(place => {
-
-//         completedCoordinates.push([
-//             place.place.longitude,
-//             place.place.latitude,
-//         ]);
-
+//     const nextPlace = await findNextPlace({
+//         currentLocation,
+//         remainingPlaces,
 //     });
-
-//     const completedRoute = {
-//         type: "LineString",
-//         coordinates: completedCoordinates,
-//     };
-
-//     // -----------------------------
-//     // Build Remaining Route
-//     // -----------------------------
-
-//     let navigation = {
-//         uncompletedRoute: {
-//             type: "LineString",
-//             coordinates: [],
-//         },
-//         remainingPlaces: [],
-//     };
-
-//     if (remainingPlaces.length) {
-
-//         navigation = await buildNavigationRoute({
-//             currentLocation,
-//             places: remainingPlaces,
-//         });
-
-//     }
-
-//     // -----------------------------
-//     // Final Response
-//     // -----------------------------
+//     remainingPlaces = remainingPlaces.filter(place=>place._id!==nextPlace._id);
+//     nextPlace.routeColor = ROUTE_COLORS.next;
+//     nextPlace.markerColor = ROUTE_COLORS.next;
 
 //     return {
 
 //         status: tour.status,
 
-//         completed: tour.status === "completed",
+//         startedAt: tour.startedAt,
+
+//         completedAt: tour.completedAt,
+
+//         startLocation: tour.startLocation,
 
 //         currentLocation,
 
-//         completedRoute,
+//         progress: {
 
-//         uncompletedRoute:
-//             navigation.uncompletedRoute,
+//             totalPlaces: tour.places.length,
 
-//         remainingPlaces:
-//             navigation.remainingPlaces,
+//             completedPlaces: completedPlaces.length,
 
-//     };
+//             remainingPlaces: remainingPlaces.length,
 
-// };
+//             actualTotalDistanceFromStartLocation:
+//                 tour.actualTotalDistanceFromStartLocation,
 
-// const getTourNavigationResponse = async ({
-//     tour,
-//     currentLocation,
-// }) => {
+//             visitedTotalDistanceFromStartLocation:
+//                 tour.visitedTotalDistanceFromStartLocation,
 
-//     console.log("tour =", tour);
-//     console.log("places =", tour?.places);
-//     // -----------------------------
-//     // Completed Places
-//     // -----------------------------
-
-//     const completedPlaces = tour.places
-//         .filter(place => place.visited)
-//         .sort((a, b) => a.visitSequence - b.visitSequence);
-
-//     // -----------------------------
-//     // Remaining Places
-//     // -----------------------------
-
-//     const remainingPlaces = tour.places
-//         .filter(place => !place.visited)
-//         .sort((a, b) => a.sequence - b.sequence);
-
-//     // -----------------------------
-//     // Build Completed Route
-//     // -----------------------------
-
-//     const completedCoordinates = [];
-
-//     if (tour.startLocation) {
-
-//         completedCoordinates.push([
-//             tour.startLocation.longitude,
-//             tour.startLocation.latitude,
-//         ]);
-
-//     }
-
-//     completedPlaces.forEach(place => {
-
-//         completedCoordinates.push([
-//             place.place.longitude,
-//             place.place.latitude,
-//         ]);
-
-//     });
-
-//     const completedRoute = {
-//         type: "LineString",
-//         coordinates: completedCoordinates,
-//     };
-
-//     // -----------------------------
-//     // Build Remaining Route
-//     // -----------------------------
-
-//     let navigation = {
-//         uncompletedRoute: {
-//             type: "LineString",
-//             coordinates: [],
+//             actualTravelledDistance:
+//                 tour.actualTravelledDistance,
 //         },
-//         remainingPlaces: [],
-//     };
+//         places:[
+//             nextPlace,
 
-//     if (remainingPlaces.length) {
+//             ...completedPlaces,
 
-//         navigation = await buildNavigationRoute({
-//             currentLocation,
-//             places: remainingPlaces,
-//         });
+//             ...remainingPlaces,
+//         ]
+//         // nextPlace,
 
-//     }
+//         // completedPlaces,
 
-//     // -----------------------------
-//     // Final Response
-//     // -----------------------------
-
-//     return {
-
-//         status: tour.status,
-
-//         completed: tour.status === "completed",
-
-//         currentLocation,
-
-//         completedRoute,
-
-//         uncompletedRoute:
-//             navigation.uncompletedRoute,
-
-//         remainingPlaces:
-//             navigation.remainingPlaces,
-
+//         // remainingPlaces,
 //     };
 
 // };
-

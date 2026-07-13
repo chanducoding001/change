@@ -30,11 +30,21 @@ const getDistanceMatrix = async (places) => {
         return [[0]];
     }
 
+    // const coordinates = places
+    //     .map(place =>
+    //         `${place.longitude},${place.latitude}`
+    //     )
+    //     .join(";");
+    // const coordinates = places
+    // .map(({ place }) =>
+    //     `${place.longitude},${place.latitude}`
+    // )
+    // .join(";");
     const coordinates = places
-        .map(place =>
-            `${place.longitude},${place.latitude}`
-        )
-        .join(";");
+    .map(place =>
+        `${place.longitude},${place.latitude}`
+    )
+    .join(";");
 
     const url =
         `${OSRM}/table/v1/driving/${coordinates}?annotations=distance`;

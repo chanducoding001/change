@@ -8,6 +8,7 @@ import Divider from '@mui/material/Divider';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
+import { useSelector } from 'react-redux';
 
 const StyledMenu = styled((props) => (
   <Menu
@@ -59,6 +60,7 @@ export default function VisitTourMapFloatingComponent(props) {
     // [lng,lat] = cl
   const {handleStartTour,currentLocation} = props;
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const isTourRunningState = useSelector((state)=>state.mapSlicer.isTourRunning);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -67,10 +69,12 @@ export default function VisitTourMapFloatingComponent(props) {
     setAnchorEl(null);
   };
   const startTourClick = async ()=>{
-    console.log('started tour');
+    // console.log('started tour');
     handleStartTour();
     handleClose();
   }
+  // console.log('tour running state',isTourRunningState);
+  
   return (
     <div style={{margin:'10px 0px'}} className='center'>
       <Button
@@ -96,14 +100,14 @@ export default function VisitTourMapFloatingComponent(props) {
         open={open}
         onClose={handleClose}
       >
-        <MenuItem onClick={startTourClick} disableRipple>
+        <MenuItem onClick={startTourClick} disableRipple disabled={isTourRunningState}>
           <PlayArrowIcon sx={{fontSize:'50px'}} />
           Start Tour
         </MenuItem>
-        <MenuItem onClick={handleClose} disableRipple>
+        {/* <MenuItem onClick={handleClose} disableRipple>
           <PlayArrowIcon sx={{fontSize:'50px'}} />
           Resume Tour
-        </MenuItem>
+        </MenuItem> */}
       </StyledMenu>
     </div>
   );

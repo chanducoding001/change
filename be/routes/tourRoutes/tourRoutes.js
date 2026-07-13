@@ -16,6 +16,7 @@ const {
     addPlace,
     deletePlace,
     deleteTour,
+    deleteUnresolvedPlace,
 } = require("../../controllers/tourControllers/tourController");
 const isAdmin = require("../../middlewares/isAdmin");
 
@@ -57,11 +58,14 @@ router.post(process.env.ADD_PLACE_IN_TOUR_TAIL_URL, addPlace);
 
 
 // Delete Place
-router.delete("/:tourId/place/:placeId", deletePlace);
+router.delete(process.env.DELETE_TOUR_PLACE_TAIL_URL, deletePlace);
 
 
 // Delete Tour
 router.delete(process.env.DELETE_TOUR_TAIL_URL, deleteTour);
+
+// Delete unresolved place
+router.delete(process.env.DELETE_TOUR_UNRESOLVED_PLACE_TAIL_URL, deleteUnresolvedPlace);
 
 
 module.exports = router;

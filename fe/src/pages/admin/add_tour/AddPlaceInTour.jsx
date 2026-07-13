@@ -3,15 +3,17 @@ import GISMap from '../GIS/GISMap';
 import { useDispatch, useSelector } from 'react-redux';
 import { Typography } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import { fetchUnResolvedPlacesFromTourId } from '../../../app/mapSlicer';
+import { fetchUnResolvedPlacesFromTourId, getTourName } from '../../../app/mapSlicer';
 
 const AddPlaceInTour = () => {
     const unresolvedPlaces = useSelector((state)=>state.mapSlicer.unresolvedPlaces);
+    const slicerTourName = useSelector((state)=>state.mapSlicer.tourName);
     const dispatch = useDispatch();
-    const { tourId } = useParams();
+    const { tourId,tourName } = useParams();
   useEffect(()=>{
+    dispatch(getTourName(tourId));
     dispatch(fetchUnResolvedPlacesFromTourId(tourId));
-  },[])
+  },[]);
   return (
     <>
     <Typography sx={{
@@ -21,7 +23,7 @@ const AddPlaceInTour = () => {
         alignItems:'center',
         justifyContent:'center'
         }}>
-            Add Place in this Tour
+            Add Place to Tour : {slicerTourName ?? tourName}
     </Typography>
     <GISMap 
       addPlaceData = {{

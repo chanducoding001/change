@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { loadingStates } from '../../../app/appUtils';
-import { deleteTourApi, getAllToursApi } from '../../../app/thunkApiCalls';
+import { deleteTourApi, deleteTourPlaceApi, getAllToursApi } from '../../../app/thunkApiCalls';
 import ReusableEachStaticMapCard from './ReusableEachStaticMapCard';
 import { Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -54,17 +54,18 @@ const ListOfTours = () => {
             fetchAllTours();
         }
     },[dispatch]);
-    console.log('all tours',data);
-    const handleAddPlace = (tourId)=>{
-        console.log('add place',tourId);
-        navigate(navigationLocations?.ADDPLACEINTOUR.replace(":tourId", tourId));
+    // console.log('all tours',data);
+    const handleAddPlace = (tourIdName)=>{
+        // console.log('add place',tourIdName);
+        const {tourId,tourName} = tourIdName;
+        navigate(navigationLocations?.ADDPLACEINTOUR.replace(":tourId", tourId).replace(":tourName",tourName));
     };
     const handleVisitTour = (tourId)=>{
-        console.log('add tour',tourId);
+        // console.log('add tour',tourId);
         navigate(navigationLocations?.VISITTOUR.replace(":tourId", tourId));
     };
     const handleDeleteTour = async (tourId)=>{
-        console.log('delete tour',tourId);
+        // console.log('delete tour',tourId);
         setSelectedTourId(tourId);
         setShowModal(true);
         setModalData({
@@ -80,7 +81,7 @@ const ListOfTours = () => {
             url:`${import.meta.env.VITE_TOUR_MAIN_URL}/${selectedTourId}`
         }));
         if(deleteTourApi.fulfilled.match(result)){
-            console.log('deleted tour');
+            // console.log('deleted tour');
             setModalData({
                 title:'Tour Delete',
                 content:'Tour deleted successfully!'
@@ -88,7 +89,7 @@ const ListOfTours = () => {
             setModalType('success');
             setShowModal(false);
         }else if(deleteTourApi.rejected.match(result)){
-            console.log('could not delete tour',result.payload);
+            // console.log('could not delete tour',result.payload);
             setModalData({
                 title:'Tour Delete',
                 content:result.payload
@@ -97,7 +98,7 @@ const ListOfTours = () => {
             setShowModal(true);
         }
         } catch (error) {
-            console.log('error',error.message);
+            // console.log('error',error.message);
             setModalData({
                 title:'Tour Delete',
                 content:error.message
@@ -107,12 +108,21 @@ const ListOfTours = () => {
         }
         
     }
-    const handleDeletePlace = (placeId)=>{
-        console.log('delete place',placeId);
-    }
+    
   return (
     <>
-    <Typography className='center'>Tours List</Typography>
+    {/* <Typography className='center'>Tours List</Typography> */}
+    {
+        data?.data?.length ===0 && <Typography 
+        sx={{
+            display:'flex',
+            alignItems:'center',
+            justifyContent:'center',
+            color:'white',
+            fontWeight:600
+        }}
+        >Tours are Empty!</Typography>
+    }
         {
             data?.data?.map((place)=>(
                 <ReusableEachStaticMapCard
@@ -121,7 +131,8 @@ const ListOfTours = () => {
                 handleAddPlace={handleAddPlace}
                 handleVisitTour={handleVisitTour}
                 handleDeleteTour={handleDeleteTour}
-                handleDeletePlace={handleDeletePlace}
+                // handleDeletePlace={handleDeletePlace}
+                // handleModalDeleteTourPlace={handleModalDeleteTourPlace}
                 />
             ))
         }

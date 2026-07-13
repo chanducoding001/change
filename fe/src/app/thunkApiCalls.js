@@ -49,6 +49,8 @@ export const getATourByIdApi = createApiThunk("Get a Tour","GET");
 export const startATourApi = createApiThunk("Start a Tour","PUT");
 export const syncATourApi = createApiThunk("Sync a Tour","PUT");
 export const deleteTourApi = createApiThunk("Delete Tour","DELETE");
+export const deleteTourPlaceApi = createApiThunk("Delete Tour Place","DELETE");
+export const deleteTourUnresolvedPlaceApi = createApiThunk("Delete Tour Unresolved Place","DELETE");
 
 
 export const createDashboardApi = createApiThunk("Create dashboard","POST");

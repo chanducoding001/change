@@ -135,7 +135,7 @@ export const navigationLocations = {
   DISPLAYCENSUS:'/admin/displayCensus',
   DISPLAYSTATELGD:'/admin/displayStateLGD',
   ADDTOUR:'/admin/addTour',
-  ADDPLACEINTOUR:'/admin/addPlaceInTour/:tourId',
+  ADDPLACEINTOUR:'/admin/addPlaceInTour/:tourId/:tourName',
   VISITTOUR:'/admin/visitTour/:tourId',
   TOURSLIST:'/admin/toursList',
   WORLDMAP:'/admin/worldMap',
@@ -169,3 +169,56 @@ export function localUser() {
     return null;
   }
 }
+
+const convertUTCToIST = (date) => {
+  if (!date) return "-";
+
+  return new Date(date).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+};
+
+export const getTourTimeline = (tour) => {
+  const timeline = [];
+
+  // Start Location
+  if (tour.startLocation) {
+    timeline.push({
+      type: "startLocation",
+      name:
+        tour.startLocation.displayName ||
+        tour.startLocation.name ||
+        tour.startLocation.searchQuery,
+      visitSequence: 0,
+      sequence: 0,
+      startedAt: convertUTCToIST(tour.startedAt),
+      visitedAt: "-",
+      visited: "Yes",
+    });
+  }
+
+  // Places
+  timeline.push(
+    ...(tour.places || []).map((item) => ({
+      type: "place",
+      name:
+        item.place?.searchQuery ||
+        item.place?.displayName ||
+        item.place?.name,
+      visitSequence: item.visitSequence,
+      sequence: item.sequence,
+      startedAt: convertUTCToIST(item.startedAt),
+      visitedAt: convertUTCToIST(item.visitedAt),
+      visited: item.visited ? "Yes" : "No",
+    }))
+  );
+
+  return timeline;
+};

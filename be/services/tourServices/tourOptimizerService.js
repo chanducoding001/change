@@ -81,15 +81,25 @@ const optimizeTour = async (places) => {
             break;
         }
 
-        legs.push({
+        // legs.push({
 
-            from: places[current]._id,
+        //     from: places[current]._id,
 
-            to: places[nextIndex]._id,
+        //     to: places[nextIndex]._id,
 
-            distance: shortestDistance,
+        //     distance: shortestDistance,
 
-        });
+        // });
+//         legs.push({
+//     from: places[current].place._id,
+//     to: places[nextIndex].place._id,
+//     distance: shortestDistance,
+// });
+legs.push({
+    from: places[current]._id,
+    to: places[nextIndex]._id,
+    distance: shortestDistance,
+});
 
         totalDistance += shortestDistance;
 

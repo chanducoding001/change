@@ -2,12 +2,21 @@ import { useState } from "react";
 import axios from "axios";
 import AddPlaceButton from "../add_tour/AddPlaceButton";
 import { Button, Input, TextField } from "@mui/material";
+import UniversalModal from "../../../features/UniversalModal";
+import useModal from "../../../reusables/useModal";
 
 const SearchBox = (props) => {
   const { setDestination,addPlaceData } = props;
   const [search, setSearch] = useState("");
   const [searchedString,setSearchedString] = useState("");
-
+  const {
+    showModal,
+    modalData,
+    modalType,
+    setShowModal,
+    setModalData,
+    setModalType,
+  } = useModal();
   const searchPlace = async () => {
     if (!search.trim()) return;
 
@@ -23,7 +32,13 @@ const SearchBox = (props) => {
     );
 
     if (!res.data.length) {
-      alert("Location not found");
+      // alert("Location not found");
+      setModalData({
+          title:'Search Place',
+          content: "Location not found!"
+        }),
+        setModalType('error');
+        setShowModal(true);
       return;
     }
 
@@ -69,6 +84,9 @@ const SearchBox = (props) => {
       <Button onClick={searchPlace} size="small" variant="outlined">
         Search
       </Button>
+      <Button onClick={()=>setSearch('')} size="small" variant="outlined">
+        Reset
+      </Button>
       {
         addPlaceData?.addPlace && (
           <AddPlaceButton 
@@ -79,6 +97,12 @@ const SearchBox = (props) => {
           />
         )
       }
+      <UniversalModal
+      showModal={showModal}
+      modalData={modalData}
+      modalType={modalType}
+      setShowModal={setShowModal}
+      />
     </div>
   );
 };

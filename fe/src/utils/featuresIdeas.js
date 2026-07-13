@@ -750,3 +750,16 @@
 // -------------- * ------------------
 // another feature is to automatically process the data given via xlsx sheet and generate
 // the required places to travel based upon some conditions
+
+
+// [
+//     {
+//         type:"place/startLocation",
+//         name:"searchedQuery",
+//         visitSequence:1/2/3,
+//         sequence:1/2/3,
+//         startedAt:"2026-07-12T03:44:51.888Z",
+//         visitedAt:"2026-07-12T03:44:51.888Z",
+//         visited:"yes/no"
+//     }
+// ]

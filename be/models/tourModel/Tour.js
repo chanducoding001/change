@@ -69,10 +69,13 @@ const tourSchema = new mongoose.Schema({
     },
 
     places: [placeSchema],
+
     unresolvedPlaces: {
         type: [unresolvedPlaceSchema],
         default: [],
     },
+
+    // Distance of the optimized tour (created while creating the tour)
     totalDistance: {
         type: Number,
         default: 0,
@@ -82,25 +85,133 @@ const tourSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
-    startLocation: {
+
+    // Distance of the tour from the ACTUAL GPS location where the user started.
+    // Calculated once in startTour().
+    actualTotalDistanceFromStartLocation: {
+        type: Number,
+        default: 0,
+    },
+
+    // Progress along the planned route.
+    // Updated only when a place becomes visited.
+    visitedTotalDistanceFromStartLocation: {
+        type: Number,
+        default: 0,
+    },
+
+    // Actual GPS distance travelled by the user.
+    actualTravelledDistance: {
+        type: Number,
+        default: 0,
+    },
+
+    lastSyncedLocation: {
         latitude: Number,
         longitude: Number,
     },
-    startedAt: {
-        type: Date,
-        default: null,
-    },
 
-    completedAt: {
-        type: Date,
-        default: null,
+    startLocation: {
+        latitude: Number,
+        longitude: Number,
+        name: String,
+        displayName: String,
+        address: {
+            country: String,
+            state: String,
+            district: String,
+            subDistrict: String,
+            village: String,
+            postcode: String,
+        },
     },
+    currentNextPlace: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Place",
+    default: null,
+},
+
+    startedAt: Date,
+
+    completedAt: Date,
 
 }, {
     timestamps: true,
 });
 
 module.exports = mongoose.model("Tour", tourSchema);
+
+
+// const tourSchema = new mongoose.Schema({
+
+//     name: {
+//         type: String,
+//         required: true,
+//         trim: true,
+//     },
+
+//     description: {
+//         type: String,
+//         default: "",
+//     },
+
+//     status: {
+//         type: String,
+//         enum: [
+//             "pending",
+//             "running",
+//             "paused",
+//             "completed",
+//         ],
+//         default: "pending",
+//     },
+
+//     places: [placeSchema],
+//     unresolvedPlaces: {
+//         type: [unresolvedPlaceSchema],
+//         default: [],
+//     },
+//     totalDistance: {
+//         type: Number,
+//         default: 0,
+//     },
+
+//     totalDuration: {
+//         type: Number,
+//         default: 0,
+//     },
+//     // startLocation: {
+//     //     latitude: Number,
+//     //     longitude: Number,
+//     // },
+//     startLocation: {
+//         latitude: Number,
+//         longitude: Number,
+//         name: String,
+//         displayName: String,
+//         address: {
+//             country: String,
+//             state: String,
+//             district: String,
+//             subDistrict: String,
+//             village: String,
+//             postcode: String,
+//         },
+//     },
+//     startedAt: {
+//         type: Date,
+//         default: null,
+//     },
+
+//     completedAt: {
+//         type: Date,
+//         default: null,
+//     },
+
+// }, {
+//     timestamps: true,
+// });
+
 
 
 

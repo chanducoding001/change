@@ -98,7 +98,7 @@ const DisplaySDSDVData = () => {
 
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const dispatch = useDispatch();
-  console.log('selected state',selectedState);
+  // console.log('selected state',selectedState);
   const stateCode = selectedState?.stateCode;
   const districtCode = selectedDist?.districtCode;
   const subDistrictCode = selectedSubDist?.subDistrictCode;

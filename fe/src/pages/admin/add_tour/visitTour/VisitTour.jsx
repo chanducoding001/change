@@ -11,11 +11,19 @@ import {
 import { loadingStates } from "../../../../app/appUtils";
 import {
   containRunningTourData,
+  isTourRunning,
 } from "../../../../app/mapSlicer";
 
 import VisitTourMap from "./VisitTourMap";
 import VisitTourMapFloatingComponent from "./VisitTourMapFloatingComponent";
+import useModal from "../../../../reusables/useModal";
+import UniversalModal from "../../../../features/UniversalModal";
 
+const tourStates = {
+  PENDING:'pending',
+  RUNNING:'running',
+  COMPLETED:'completed'
+}
 const VisitTour = () => {
   const { tourId } = useParams();
 
@@ -37,7 +45,15 @@ const VisitTour = () => {
   const runningTourData = useSelector(
     (state) => state.mapSlicer.runningTourData
   );
-
+  const tourRunningState = useSelector((state)=>state.mapSlicer.isTourRunning);
+  const {
+    showModal,
+    modalData,
+    modalType,
+    setShowModal,
+    setModalData,
+    setModalType,
+  } = useModal();
   const getATourLoading = getATourState.loading;
   const getATourData = getATourState?.data?.data;
 
@@ -49,14 +65,38 @@ const VisitTour = () => {
     try {
       const url = `${import.meta.env.VITE_TOUR_MAIN_URL}/${tourId}`;
 
-      await dispatch(
+      const result = await dispatch(
         getATourByIdApi({
           url,
           data: [],
         })
       );
+      if(getATourByIdApi.fulfilled.match(result)){
+        const isRunning = result.payload?.data?.status===tourStates.RUNNING;
+        dispatch(isTourRunning(isRunning));
+        // show pop up
+        setModalData({
+          title:'Get A tour',
+          content:'Tour details fetched successfully!'
+        });
+        setModalType('success');
+      }else if(getATourByIdApi.rejected.match(result)){
+        // show pop up
+        setModalData({
+          title:'Get A tour',
+          content:result.payload
+        });
+        setModalType('error');
+      }
+      setShowModal(true);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
+      setModalData({
+          title:'Get A tour',
+          content:error.message
+        });
+      setModalType('error');
+      setShowModal(true);
     }
   };
 
@@ -85,6 +125,8 @@ const VisitTour = () => {
 
       if (startATourApi.fulfilled.match(result)) {
         dispatch(containRunningTourData(result.payload.data));
+        const isRunning = result.payload?.data?.status===tourStates.RUNNING;
+        dispatch(isTourRunning(isRunning));
       }
     } catch (error) {
       console.log(error);
@@ -113,9 +155,18 @@ const VisitTour = () => {
 
     if (syncATourApi.fulfilled.match(result)) {
       dispatch(containRunningTourData(result.payload.data));
+      const isRunning = result.payload?.data?.status===tourStates.RUNNING;
+      dispatch(isTourRunning(isRunning));
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
+    // console.log(error);
+      setModalData({
+          title:'Get A tour',
+          content:error.message
+        });
+      setModalType('error');
+      setShowModal(true);
   }
 };
 
@@ -186,10 +237,13 @@ const VisitTour = () => {
   //-------------------------------------------------------
 
   useEffect(() => {
-    if (getATourLoading === loadingStates.IDLE) {
       fetchATour();
-    }
-  }, [getATourLoading]);
+  }, [tourId]);
+  // useEffect(() => {
+  //   if (getATourLoading === loadingStates.IDLE) {
+  //     fetchATour();
+  //   }
+  // }, [getATourLoading]);
 
   //-------------------------------------------------------
   // Sync when page is opened/refreshed
@@ -197,12 +251,20 @@ const VisitTour = () => {
 
   useEffect(() => {
     if (!currentLocation) return;
-    if (!getATourData) return;
+    if (!tourRunningState) return;
 
-    if (getATourData.status === "running") {
+    if (tourRunningState) {
       handleSyncTour();
     }
-  }, [currentLocation, getATourData]);
+  }, [currentLocation,isTourRunning]);
+  // useEffect(() => {
+  //   if (!currentLocation) return;
+  //   if (!getATourData?.status) return;
+
+  //   if (getATourData.status === "running") {
+  //     handleSyncTour();
+  //   }
+  // }, [currentLocation]);
 
   //-------------------------------------------------------
   // Periodic Sync (every 15 seconds)
@@ -285,9 +347,11 @@ useEffect(() => {
 
   //   return () => clearInterval(interval);
   // }, [currentLocation, getATourData?.status]);
-
+  // console.log('get a tour data',getATourData);
+  
   return (
     <>
+    <h1 style={{color:'white'}} className="center">You are currently visiting "{getATourData?.name}"</h1>
       <VisitTourMapFloatingComponent
         currentLocation={currentLocation}
         handleStartTour={handleStartTour}
@@ -304,6 +368,14 @@ useEffect(() => {
         lastLocation={lastLocation}
         firstFix={firstFix}
       />
+      <UniversalModal
+        showModal={showModal}
+        modalData={modalData}
+        modalType={modalType}
+        setModalType={setModalType}
+        setModalData={setModalData}
+        setShowModal={setShowModal}
+      />
     </>
   );
 };
@@ -314,176 +386,3 @@ export default VisitTour;
 
 
 
-
-
-
-
-// import React, { useEffect, useState, useRef } from 'react'
-// import { useDispatch, useSelector } from 'react-redux';
-// import { useParams } from 'react-router-dom';
-// import { getATourByIdApi, startATourApi } from '../../../../app/thunkApiCalls';
-// import { loadingStates } from '../../../../app/appUtils';
-// import VisitTourMap from './VisitTourMap';
-// import VisitTourMapFloatingComponent from './VisitTourMapFloatingComponent';
-// import { containRunningTourData } from '../../../../app/mapSlicer';
-
-// const VisitTour = () => {
-//   const { tourId } = useParams();
-//   // [lng, lat] = cl
-//   const [currentLocation, setCurrentLocation] = useState(null);
-//   const [heading, setHeading] = useState(0);
-//   const dispatch = useDispatch();
-//   const getATourByIdStateData = useSelector((state)=>state.mapSlicer.getATourByIdState);
-//   const startATourStateData = useSelector((state)=>state.mapSlicer.startATourState);
-//   const runningTourData = useSelector((state)=>state.mapSlicer.runningTourData);
-//   const mapRef = useRef();
-//   const lastLocation = useRef(null);
-//   const firstFix = useRef(true);
-//   const getATourLoading = getATourByIdStateData?.loading;
-//   const getATourData = getATourByIdStateData?.data?.data;
-//   const startATourLoading = startATourStateData?.loading;
-//   const startATourData = startATourStateData?.data?.data;
-
-//   const fetchATour = async ()=>{
-//     try {
-//       const url = `${import.meta.env.VITE_TOUR_MAIN_URL}/${tourId}`;
-//       const result = await dispatch(getATourByIdApi({
-//         url,
-//         data:[]
-//       }));
-//       if(getATourByIdApi.fulfilled.match(result)){
-//         // show pop up
-//       }else if(getATourByIdApi.rejected.match(result)){
-//         // show pop up
-//         console.log('error',result.payload);
-        
-//       }
-//     } catch (error) {
-//       console.log('error',error.message);
-//       // show pop up 
-//     }
-//   }
-//   useEffect(() => {
-//     if (!navigator.geolocation) {
-//       alert("Geolocation is not supported by this browser.");
-//       return;
-//     }
-  
-//     const watchId = navigator.geolocation.watchPosition(
-//       (position) => {
-//         const lng = position.coords.longitude;
-//         const lat = position.coords.latitude;
-  
-//         const location = [lng, lat];
-  
-//         // Update current marker
-//         setCurrentLocation(location);
-  
-//         const bearing =
-//           position.coords.heading != null
-//             ? position.coords.heading
-//             : heading;
-  
-//         setHeading(bearing);
-  
-//         if (!mapRef.current) return;
-  
-//         // Only move camera on the very first GPS fix
-//         if (firstFix.current) {
-//           firstFix.current = false;
-  
-//           lastLocation.current = location;
-  
-//           mapRef.current.flyTo({
-//             center: location,
-//             zoom: 17,
-//             pitch: 60,
-//             bearing,
-//             duration: 1200,
-//           });
-  
-//           return;
-//         }
-  
-//         // Save latest location
-//         lastLocation.current = location;
-  
-//         // IMPORTANT:
-//         // Do NOT call flyTo() or easeTo() here.
-//         // Only the marker position changes.
-//       },
-//       (err) => {
-//         console.error(err);
-//       },
-//       {
-//         enableHighAccuracy: true,
-//         maximumAge: 1000,
-//         timeout: 10000,
-//       }
-//     );
-  
-//     return () => {
-//       navigator.geolocation.clearWatch(watchId);
-//     };
-//   }, []);
-
-//   useEffect(()=>{
-//     // call api with current location
-//     // update td for every 10m or 30m or 1hr
-//     if(getATourLoading===loadingStates.IDLE){
-//       fetchATour();
-//     }
-//   },[getATourLoading]);
-
-//   const handleStartTour = async ()=>{
-//     try {
-//       const url = import.meta.env.VITE_START_TOUR.replace(':tourId',tourId);
-//       // [lng,lat] = cl
-//       console.log('cl',currentLocation);
-      
-//       const location = {
-//         longitude:currentLocation[0],
-//         latitude:currentLocation[1],
-//       }
-//       const result = await dispatch(startATourApi({
-//         url,
-//         data: location
-//       }));
-//       if(startATourApi.fulfilled.match(result)){
-//         console.log('fetched successfully!');
-//         const required = result.payload.data;
-//         dispatch(containRunningTourData(required));
-//         // show pop up
-//       }else if(startATourApi.rejected.match(result)){
-//         // show pop up
-//         console.log('error',result.payload);
-        
-//       }
-//     } catch (error) {
-//       console.log('error',error.message);
-//     }
-//   };
-
-
-//   return (
-//     <>
-//       <VisitTourMapFloatingComponent
-//       currentLocation={currentLocation}
-//       handleStartTour={handleStartTour}
-//       />
-//       <VisitTourMap
-//       currentLocation={currentLocation}
-//       setCurrentLocation={setCurrentLocation}
-//       runningTourData={runningTourData}
-//       setHeading={setHeading}
-//       heading={heading}
-//       mapRef={mapRef}
-//       lastLocation={lastLocation}
-//       firstFix={firstFix}
-//       />
-      
-//     </>
-//   )
-// }
-
-// export default VisitTour;

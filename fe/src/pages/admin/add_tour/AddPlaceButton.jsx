@@ -10,9 +10,12 @@ import CloseIcon from '@mui/icons-material/Close';
 import Typography from '@mui/material/Typography';
 import { List, ListItem, ListItemText } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { addPlaceInTourApi } from '../../../app/thunkApiCalls';
-import { addPlaceInTour } from '../../../app/mapSlicer';
-import { useDispatch } from 'react-redux';
+import { addPlaceInTourApi, deleteTourUnresolvedPlaceApi } from '../../../app/thunkApiCalls';
+import { addPlaceInTour, fetchUnResolvedPlacesFromTourId, updateResolvedPlacesInTour } from '../../../app/mapSlicer';
+import { useDispatch, useSelector } from 'react-redux';
+import UniversalModal from '../../../features/UniversalModal';
+import useModal from '../../../reusables/useModal';
+import { useParams } from 'react-router-dom';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -24,9 +27,23 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 }));
 
 export default function AddPlaceButton(props) {
-  const {addPlaceData,searchedString,setSearchedString} = props;
+  const {addPlaceData,searchedString,setSearchedString,setSearch} = props;
   const [open, setOpen] = React.useState(false);
+  const unResolvedPlacesData = useSelector((state)=>state.mapSlicer.unresolvedPlaces);
   const dispatch = useDispatch();
+  const {tourId} = useParams();
+  const {
+    showModal,
+    modalData,
+    modalType,
+    modalNavigation,
+    modalAction,
+    setModalAction,
+    setShowModal,
+    setModalData,
+    setModalType,
+    setModalNavigation,
+  } = useModal();
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -47,17 +64,72 @@ export default function AddPlaceButton(props) {
       }));
       if(addPlaceInTourApi.fulfilled.match(result)){
         const data = result.payload;
-        console.log('data',data);
+        // console.log('add place fulfilled',data);
         dispatch(addPlaceInTour(data));
+        setModalData({
+          title:'Add Place',
+          content:`${searchedString} added successfully!`
+        }),
+        setModalType('success');
         setSearchedString('');
         setSearch('');
       }else if(addPlaceInTourApi.rejected.match(result)){
-        console.log('error',result.payload);
+        // console.log('error',result.payload);
+        setModalData({
+          title:'Add Place',
+          content: result.payload
+        }),
+        setModalType('error');
       }
+        setShowModal(true);
     } catch (error) {
-        console.log('error',error.message);
+        // console.log('error',error.message);
+        setModalData({
+          title:'Add Place',
+          content: error.message
+        }),
+        setModalType('error');
+        setShowModal(true);
     }
   };
+  const handleDeleteUnresolvedPlace = async (searchQuery)=>{
+    try {
+      const url = `${import.meta.env.VITE_DELETE_TOUR_UNRESOLVED_PLACE.replace(':tourId',addPlaceData?.tourId)}`;
+      const result = await dispatch(deleteTourUnresolvedPlaceApi({
+        url,
+        data:{searchQuery}
+      }));
+      if(deleteTourUnresolvedPlaceApi.fulfilled.match(result)){
+        setModalData({
+          title:'Delete Unresolved place',
+          content: 'Successfully deleted unresolved place!'
+        });
+        setModalType('success');
+        setShowModal(true);
+        // console.log('delete unresolved',{tourId,searchQuery});
+        // dispatch(fetchUnResolvedPlacesFromTourId(tourId));
+        
+        dispatch(updateResolvedPlacesInTour(result.payload?.data));
+      }else if(deleteTourUnresolvedPlaceApi.rejected.match(result)){
+        setModalData({
+          title:'Delete Unresolved place',
+          content: result.payload
+        });
+        setModalType('error');
+        setShowModal(true);
+
+      }
+    } catch (error) {
+      setModalData({
+          title:'Delete Unresolved place',
+          content: error.message
+        });
+        setModalType('error');
+        setShowModal(true);
+    }
+  }
+  // console.log('unresolved',resolvedPlacesData);
+  
   return (
     <React.Fragment>
       <Button variant="outlined" onClick={handleAddPlace}>Add Place in this Tour</Button>
@@ -87,12 +159,15 @@ export default function AddPlaceButton(props) {
         <DialogContent dividers>
             <List>
           {
-            addPlaceData?.unresolvedPlaces?.length>0 ?(
-              addPlaceData?.unresolvedPlaces?.map((place)=>(
+            // addPlaceData?.unresolvedPlaces?.length>0 ?(
+            //   addPlaceData?.unresolvedPlaces?.map((place)=>(
+            unResolvedPlacesData.length>0 ?(
+              unResolvedPlacesData.map((place)=>(
                 <ListItem
                 key={place?.searchQuery}
                   secondaryAction={
-                    <IconButton edge="end" aria-label="delete">
+                    <IconButton edge="end" aria-label="delete" 
+                    onClick={()=>handleDeleteUnresolvedPlace(place?.searchQuery)}>
                       <DeleteIcon />
                     </IconButton>
                   }
@@ -117,6 +192,14 @@ export default function AddPlaceButton(props) {
             </List>
         </DialogContent>
       </BootstrapDialog>
+      <UniversalModal
+      showModal={showModal}
+      modalData={modalData}
+      modalType={modalType}
+      setShowModal={setShowModal}
+      setModalData={setModalData}
+      setModalType={setModalType}
+      />
     </React.Fragment>
   );
 }

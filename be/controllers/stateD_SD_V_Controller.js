@@ -238,7 +238,7 @@ const getAllLGDStates = async (req, res) => {
       data,
     });
   } catch (err) {
-    console.error("Get LGD States Error:", err);
+    // console.error("Get LGD States Error:", err);
 
     return res.status(500).json({
       success: false,
@@ -399,9 +399,9 @@ const getVillagesBySubDistrictLGD = async (req, res) => {
     
     const data = subDistrict.villages.map(
       (village,index) => {
-        if(index===0){
-            console.log('state',state);
-        }
+        // if(index===0){
+        //     console.log('state',state);
+        // }
         return {
         id: village.villageCode,
         state_name: state.stateName,

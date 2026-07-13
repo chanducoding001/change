@@ -79,7 +79,7 @@ const UniversalModal = (props) => {
       return <ErrorIcon sx={{ ...iconStyle, color: "#ff4d4d" }} />;
     return <InfoIcon sx={{ ...iconStyle, color: "#4da6ff" }} />;
   };
-
+  
   return (
     <>
       <Modal open={showModal} onClose={handleClose}>
