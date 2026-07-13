@@ -14,6 +14,7 @@ const {
   getRoute,
   haversineDistance,
   normalizeCoordinate,
+  reverseGeocode,
 } = require("../../services/tourServices/tourNavigationService");
 
 // Services (we'll create these next)
@@ -23,7 +24,7 @@ const {
 const {
   findNearestPlace,
 } = require("../../services/tourServices/nearestPlaceService");
-const { reverseGeocode } = require("../../services/tourServices/reverseGeoCode");
+// const { reverseGeocode } = require("../../services/tourServices/reverseGeoCode");
 // const reverseGeocode = require("../../services/tourServices/reverseGeocode");
 
 const tourStates = {
