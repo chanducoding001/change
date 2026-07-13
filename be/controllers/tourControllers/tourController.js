@@ -619,37 +619,82 @@ const syncTour = async (req, res) => {
  * Actual travelled distance (GPS movement)
  * --------------------------------------------------
  */
+// console.log("tour.lastSyncedLocation", tour.lastSyncedLocation);
+// console.log("latitude", latitude);
+// console.log("longitude", longitude);
 
-const previousLocation = {
-    latitude: normalizeCoordinate(tour.lastSyncedLocation.latitude),
-    longitude: normalizeCoordinate(tour.lastSyncedLocation.longitude),
-};
+// const previousLocation = {
+//     latitude: normalizeCoordinate(tour.lastSyncedLocation.latitude),
+//     longitude: normalizeCoordinate(tour.lastSyncedLocation.longitude),
+// };
 
-const current = {
-    latitude: normalizeCoordinate(latitude),
-    longitude: normalizeCoordinate(longitude),
-};
+// const current = {
+//     latitude: normalizeCoordinate(latitude),
+//     longitude: normalizeCoordinate(longitude),
+// };
+
+// if (
+//     previousLocation.latitude !== current.latitude ||
+//     previousLocation.longitude !== current.longitude
+// ) {
+//     const travelledDistance = haversineDistance(
+//         previousLocation.latitude,
+//         previousLocation.longitude,
+//         current.latitude,
+//         current.longitude
+//     );
+//     if(travelledDistance>10){
+//       tour.actualTravelledDistance += travelledDistance;
+//       tour.lastSyncedLocation = {
+//         latitude,
+//         longitude,
+//     };
+//     }
+// } 
+// else {
+//     // First sync after starting the tour
+//     tour.lastSyncedLocation = {
+//         latitude,
+//         longitude,
+//     };
+// }
 
 if (
-    previousLocation.latitude !== current.latitude ||
-    previousLocation.longitude !== current.longitude
+    tour.lastSyncedLocation &&
+    tour.lastSyncedLocation.latitude != null &&
+    tour.lastSyncedLocation.longitude != null
 ) {
-    const travelledDistance = haversineDistance(
-        previousLocation.latitude,
-        previousLocation.longitude,
-        current.latitude,
-        current.longitude
-    );
-    if(travelledDistance>10){
-      tour.actualTravelledDistance += travelledDistance;
-      tour.lastSyncedLocation = {
-        latitude,
-        longitude,
+    const previousLocation = {
+        latitude: normalizeCoordinate(tour.lastSyncedLocation.latitude),
+        longitude: normalizeCoordinate(tour.lastSyncedLocation.longitude),
     };
+
+    const current = {
+        latitude: normalizeCoordinate(latitude),
+        longitude: normalizeCoordinate(longitude),
+    };
+
+    if (
+        previousLocation.latitude !== current.latitude ||
+        previousLocation.longitude !== current.longitude
+    ) {
+        const travelledDistance = haversineDistance(
+            previousLocation.latitude,
+            previousLocation.longitude,
+            current.latitude,
+            current.longitude
+        );
+
+        if (travelledDistance > 10) {
+            tour.actualTravelledDistance += travelledDistance;
+            tour.lastSyncedLocation = {
+                latitude,
+                longitude,
+            };
+        }
     }
-} 
-else {
-    // First sync after starting the tour
+} else {
+    // First sync
     tour.lastSyncedLocation = {
         latitude,
         longitude,
@@ -713,7 +758,8 @@ else {
         });
 
     } catch (error) {
-
+        console.log('error',error.message);
+        
         return res.status(500).json({
 
             success: false,
