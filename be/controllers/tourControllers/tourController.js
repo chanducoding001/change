@@ -23,7 +23,8 @@ const {
 const {
   findNearestPlace,
 } = require("../../services/tourServices/nearestPlaceService");
-const reverseGeocode = require("../../services/tourServices/reverseGeoCode");
+const { reverseGeocode } = require("../../services/tourServices/reverseGeoCode");
+// const reverseGeocode = require("../../services/tourServices/reverseGeocode");
 
 const tourStates = {
   PENDING:'pending',

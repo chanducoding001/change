@@ -43,4 +43,4 @@ const reverseGeocode = async ({ latitude, longitude }) => {
     };
 };
 
-module.exports = reverseGeocode;
+module.exports = {reverseGeocode};
