@@ -125,14 +125,14 @@ export default function ReusableEachStaticMapCard(props) {
                 width: "100%",
               }}
             >
-              {place?.status === "running" && (
+              {/* {place?.status === "running" && ( */}
                 <ReusableDialog
                   dialogBtnText="Tour Visited Sequence"
                   dialogTitle={place?.name}
                 >
                   <TourVisitSequence place={place} />
                 </ReusableDialog>
-              )}
+               {/* )} */}
               <ReusableDialog
                 dialogBtnText="Tour Statictics"
                 dialogTitle={place?.name}

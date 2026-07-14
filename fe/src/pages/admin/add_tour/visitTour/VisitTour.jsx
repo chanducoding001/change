@@ -351,7 +351,7 @@ useEffect(() => {
   
   return (
     <>
-    <h1 style={{color:'white'}} className="center">You are currently visiting "{getATourData?.name}"</h1>
+    <h1 style={{color:'white',fontSize:'1.3rem'}} className="center">You are currently visiting "{getATourData?.name}"</h1>
       <VisitTourMapFloatingComponent
         currentLocation={currentLocation}
         handleStartTour={handleStartTour}

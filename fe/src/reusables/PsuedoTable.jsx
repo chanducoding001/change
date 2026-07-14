@@ -481,31 +481,97 @@ const PsuedoTable = (props) => {
           </Select>
         </FormControl>
       </Grid>
-      <Box sx={{ marginTop: "10px" }}>
-        <Grid container spacing={2} mb={2}>
-          <Grid size={3}>
-            <Typography>Rows :{statistics.rows}</Typography>
-          </Grid>
+      {/* <Box
+  sx={{
+    mt: 2,
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 2,
+  }}
+>
+  <Box
+    sx={{
+      width: { xs: "100%", md: "50%" },
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      flexWrap: "wrap",
+      gap: 1,
+    }}
+  >
+    <Typography>Rows: {statistics.rows}</Typography>
 
-          <Grid size={3}>
-            <Typography>
-              Population :{formatCellValue("pop", statistics.population)}
-            </Typography>
-          </Grid>
+    <Typography>
+      Population: {formatCellValue("pop", statistics.population)}
+    </Typography>
+  </Box>
 
-          <Grid size={3}>
-            <Button variant="contained" onClick={downloadTable}>
-              Download PDF
-            </Button>
-          </Grid>
-          <Grid size={3}>
-            <Button variant="contained" color="success" onClick={downloadExcel}>
-              Download Excel
-            </Button>
-          </Grid>
-        </Grid>
-      </Box>
+  <Box
+    sx={{
+      width: { xs: "100%", md: "50%" },
+      display: "flex",
+      flexDirection: { xs: "column", sm: "row" },
+      justifyContent: "space-between",
+      gap: 1,
+    }}
+  >
+    <Button
+      variant="contained"
+      onClick={downloadTable}
+      sx={{ width: { xs: "100%", sm: "auto" } }}
+    >
+      Download PDF
+    </Button>
 
+    <Button
+      variant="contained"
+      color="success"
+      onClick={downloadExcel}
+      sx={{ width: { xs: "100%", sm: "auto" } }}
+    >
+      Download Excel
+    </Button>
+  </Box>
+      </Box> */}
+      <Box
+  sx={{
+    mt: 2,
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 2,
+  }}
+>
+  <Typography sx={{ width: { xs: "100%", sm: "auto" } }}>
+    Rows: {statistics.rows}
+  </Typography>
+
+  <Typography sx={{ width: { xs: "100%", sm: "auto" } }}>
+    Population: {formatCellValue("pop", statistics.population)}
+  </Typography>
+
+  <Button
+    variant="contained"
+    onClick={downloadTable}
+    sx={{ width: { xs: "100%", sm: "auto" } }}
+  >
+    Download PDF
+  </Button>
+
+  <Button
+    variant="contained"
+    color="success"
+    onClick={downloadExcel}
+    sx={{ width: { xs: "100%", sm: "auto" } }}
+  >
+    Download Excel
+  </Button>
+</Box>
       <Box
         sx={{
           width: "100%",
