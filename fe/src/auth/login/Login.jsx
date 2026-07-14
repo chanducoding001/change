@@ -305,7 +305,7 @@ const Login = () => {
         showModal={showModal}
         setShowModal={setShowModal}
         navigateLocation={redirectPath}
-        type={modalType}
+        modalType={modalType}
         setModalType={setModalType}
       />
     </>

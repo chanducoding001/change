@@ -359,7 +359,7 @@ const SignUp = () => {
         setModalData={setModalData}
         showModal={showModal}
         setShowModal={setShowModal}
-        type={modalType}
+        modalType={modalType}
         setModalType={setModalType}
         navigateLocation={modalNavigation}
       />
