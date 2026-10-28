@@ -45,48 +45,48 @@ export const sidebarContent = [
     icon:<CreateIcon/>,
     locationToTravel:navigationLocations?.CREATEDATA
   },
-  {
-    roles:[ROLES.ADMIN],
-    title:'Upload Census Data',
-    icon:<UploadFileIcon/>,
-    locationToTravel:navigationLocations?.UPLOADCSVDATA
-  },
+  // {
+  //   roles:[ROLES.ADMIN],
+  //   title:'Upload Census Data',
+  //   icon:<UploadFileIcon/>,
+  //   locationToTravel:navigationLocations?.UPLOADCSVDATA
+  // },
   {
     roles:[ROLES.ADMIN],
     title:'Personal Works',
     icon:<AssuredWorkloadIcon/>,
     locationToTravel:navigationLocations?.ALLPERSONALWORKSLIST
   },
-  {
-    roles:[ROLES.ADMIN],
-    title:'World Map',
-    icon:<ExploreIcon/>,
-    locationToTravel:navigationLocations?.WORLDMAP
-  },
-  {
-    roles:[ROLES.ADMIN],
-    title:'Display Census Data',
-    icon:<TvIcon/>,
-    locationToTravel:navigationLocations?.DISPLAYCENSUS
-  },
-  {
-    roles:[ROLES.ADMIN],
-    title:'Display State LGD Data',
-    icon:<TvIcon/>,
-    locationToTravel:navigationLocations?.DISPLAYSTATELGD
-  },
-  {
-    roles:[ROLES.ADMIN],
-    title:'Add Tour',
-    icon:<ExploreIcon/>,
-    locationToTravel:navigationLocations?.ADDTOUR
-  },
-  {
-    roles:[ROLES.ADMIN],
-    title:'List of Tours',
-    icon:<ExploreIcon/>,
-    locationToTravel:navigationLocations?.TOURSLIST
-  },
+  // {
+  //   roles:[ROLES.ADMIN],
+  //   title:'World Map',
+  //   icon:<ExploreIcon/>,
+  //   locationToTravel:navigationLocations?.WORLDMAP
+  // },
+  // {
+  //   roles:[ROLES.ADMIN],
+  //   title:'Display Census Data',
+  //   icon:<TvIcon/>,
+  //   locationToTravel:navigationLocations?.DISPLAYCENSUS
+  // },
+  // {
+  //   roles:[ROLES.ADMIN],
+  //   title:'Display State LGD Data',
+  //   icon:<TvIcon/>,
+  //   locationToTravel:navigationLocations?.DISPLAYSTATELGD
+  // },
+  // {
+  //   roles:[ROLES.ADMIN],
+  //   title:'Add Tour',
+  //   icon:<ExploreIcon/>,
+  //   locationToTravel:navigationLocations?.ADDTOUR
+  // },
+  // {
+  //   roles:[ROLES.ADMIN],
+  //   title:'List of Tours',
+  //   icon:<ExploreIcon/>,
+  //   locationToTravel:navigationLocations?.TOURSLIST
+  // },
   {
     roles:[ROLES.ADMIN],
     title:'Dashboards list',
