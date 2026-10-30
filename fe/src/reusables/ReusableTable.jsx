@@ -23,6 +23,8 @@ import PersonIcon from "@mui/icons-material/Person";
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { NavLink } from "react-router-dom";
+import { navigationLocations } from "../utils/utils";
 
 export default function ReusableTable({
   rows = [],
@@ -252,7 +254,11 @@ export default function ReusableTable({
                         >
                           <PersonIcon />
                         </Avatar>
-                      ) : (
+                      ) : column === "actions" ?(
+                        <NavLink to={navigationLocations.DISPLAYTHEBOOK.replace(":bookId", row.id)}>
+                          Open Book
+                        </NavLink>
+                      ): (
                         row[column]
                       )}
                     </TableCell>

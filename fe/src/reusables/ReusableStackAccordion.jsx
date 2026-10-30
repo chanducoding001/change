@@ -20,10 +20,12 @@ import {
 } from "../app/thunkApiCalls";
 import { callKeys } from "../pages/admin/CreateInfoWork";
 import {
+  deleteChapterInFetchedBooks,
   deleteOneInAllDashboards,
   deleteOneInAllInfo,
   deleteOneInAllPersonalWorks,
   deleteOneInAllWorks,
+  updateChapterInFetchedBooks,
   updateMainDashboard,
   updateOneInAllDashboards,
   updateOneInAllInfo,
@@ -42,6 +44,7 @@ export default function ReusableStackAccordion(props) {
     saveUrl,
     deleteUrl,
     id,
+    bookId,
     saveApiReference,
     deleteApiReference,
     setParentModalData,
@@ -114,7 +117,7 @@ const stripHtml = (html = "") => {
         }),
       );
       if (setMainDashboardApi.fulfilled.match(result)) {
-        console.log("main", result.payload);
+        // console.log("main", result.payload);
         const requiredPayload = { data: result.payload?.data };
         // update store and show popup
         dispatch(updateMainDashboard(requiredPayload));
@@ -162,57 +165,160 @@ const stripHtml = (html = "") => {
   //   }
   // };
 
-  const handleSave = async () => {
-    try {
-      const result = await dispatch(
-        saveApiReference({
-          url: `${saveUrl}/${id}`,
-          data: { title, content },
-        }),
-      );
+  // const handleSave = async () => {
+  //   try {
+  //     let result;
+  //     if(type === callKeys.BOOK){
+  //        result = await dispatch(
+  //       saveApiReference({
+  //         url: `${saveUrl}/${id}`,
+  //         data: { title, content, bookId },
+  //       }),
+  //     );
+  //     }else{
+  //       result = await dispatch(
+  //       saveApiReference({
+  //         url: `${saveUrl}/${id}`,
+  //         data: { title, content },
+  //       }),
+  //     );
+  //     }
+  //     // const result = await dispatch(
+  //     //   saveApiReference({
+  //     //     url: `${saveUrl}/${id}`,
+  //     //     data: { title, content },
+  //     //   }),
+  //     // );
 
-      if (saveApiReference.fulfilled.match(result)) {
-        const resultPayload = result.payload?.data;
+  //     if (saveApiReference.fulfilled.match(result)) {
+  //       const resultPayload = result.payload?.data;
+  //       console.log('result payload',resultPayload);
+        
+  //       if (type === callKeys.INFO) {
+  //         // dispatch update info
+  //         dispatch(updateOneInAllInfo(resultPayload));
+  //       } else if (type === callKeys.WORK) {
+  //         // dispatch update work
+  //         dispatch(updateOneInAllWorks(resultPayload));
+  //       } else if(type === callKeys.PERSONALWORK){
+  //         dispatch(updateOneInAllPersonalWorks(resultPayload))
+  //       } else if (type === callKeys.DASHBOARD) {
+  //         // update dashboards
+  //         dispatch(updateOneInAllDashboards(resultPayload));
+  //       } else if (type === callKeys.BOOK) {
+  //         // update book
+  //         const updatedPayload = {...resultPayload,bookId}
+  //         dispatch(updateChapterInFetchedBooks(updatedPayload));
+  //       }
+  //       setModalData({
+  //         title: "Success",
+  //         content: `${type} saved successfully!`,
+  //       });
+  //       setModalType("success");
+  //       setEditMode(false);
+  //     } else if (saveApiReference.rejected.match(result)) {
+  //       setModalData({ title: "Failed!", content: result.payload });
+  //       setModalType("error");
+  //     }
+  //   } catch (error) {
+  //     setModalData({ title: "Failed!", content: result.payload });
+  //     setModalType("error");
+  //   }
+  //   setShowModal(true);
+  // };
 
-        if (type === callKeys.INFO) {
-          // dispatch update info
-          dispatch(updateOneInAllInfo(resultPayload));
-        } else if (type === callKeys.WORK) {
-          // dispatch update work
-          dispatch(updateOneInAllWorks(resultPayload));
-        } else if(type === callKeys.PERSONALWORK){
-          dispatch(updateOneInAllPersonalWorks(resultPayload))
-        } else if (type === callKeys.DASHBOARD) {
-          // update dashboards
-          dispatch(updateOneInAllDashboards(resultPayload));
-        }
-        setModalData({
-          title: "Success",
-          content: `${type} saved successfully!`,
-        });
-        setModalType("success");
-        setEditMode(false);
-      } else if (saveApiReference.rejected.match(result)) {
-        setModalData({ title: "Failed!", content: result.payload });
-        setModalType("error");
+  
+const handleSave = async () => {
+  try {
+    const data =
+      type === callKeys.BOOK
+        ? { title, content, bookId }
+        : { title, content };
+
+    const result = await dispatch(
+      saveApiReference({
+        url: `${saveUrl}/${id}`,
+        data,
+      })
+    );
+
+    if (saveApiReference.fulfilled.match(result)) {
+      const resultPayload = result.payload?.data;
+
+      if (type === callKeys.INFO) {
+        dispatch(updateOneInAllInfo(resultPayload));
+      } else if (type === callKeys.WORK) {
+        dispatch(updateOneInAllWorks(resultPayload));
+      } else if (type === callKeys.PERSONALWORK) {
+        dispatch(updateOneInAllPersonalWorks(resultPayload));
+      } else if (type === callKeys.DASHBOARD) {
+        dispatch(updateOneInAllDashboards(resultPayload));
+      } else if (type === callKeys.BOOK) {
+        dispatch(
+          updateChapterInFetchedBooks({
+            ...resultPayload,
+            bookId,
+            chapterId: id,
+          })
+        );
       }
-    } catch (error) {
-      setModalData({ title: "Failed!", content: result.payload });
+
+      setModalData({
+        title: "Success",
+        content: `${type} saved successfully!`,
+      });
+
+      setModalType("success");
+      setEditMode(false);
+    } else {
+      setModalData({
+        title: "Failed!",
+        content: result.payload || result.error?.message || "Something went wrong.",
+      });
+
       setModalType("error");
     }
-    setShowModal(true);
-  };
+  } catch (error) {
+    console.error("Save error:", error);
+
+    setModalData({
+      title: "Failed!",
+      content: error.message || "Something went wrong.",
+    });
+
+    setModalType("error");
+  }
+
+  setShowModal(true);
+};
+
   // ---------------- DELETE ----------------
 
   async function handleDelete() {
     setShowModal(false);
+    let result;
     try {
-      const result = await dispatch(
+      if(type===callKeys.BOOK){
+        result = await dispatch(
+        deleteApiReference({
+          url: `${deleteUrl}/${id}`,
+          data: {bookId},
+        }),
+      );
+      }else{
+        result = await dispatch(
         deleteApiReference({
           url: `${deleteUrl}/${id}`,
           data: {},
         }),
       );
+      }
+      // const result = await dispatch(
+      //   deleteApiReference({
+      //     url: `${deleteUrl}/${id}`,
+      //     data: {},
+      //   }),
+      // );
       if (deleteApiReference.fulfilled.match(result)) {
         // update in the store with id
         if (type === callKeys.INFO) {
@@ -224,6 +330,9 @@ const stripHtml = (html = "") => {
         }
         else if (type === callKeys.DASHBOARD) {
           dispatch(deleteOneInAllDashboards(id));
+        } else if(type === callKeys.BOOK) {
+          const deletingChapterPayload = {chapterId:id,bookId}
+          dispatch(deleteChapterInFetchedBooks(deletingChapterPayload));
         }
         setParentModalData({
           title: "Success!",
@@ -574,7 +683,7 @@ const stripHtml = (html = "") => {
         setShowModal={setShowModal}
         modalData={modalData}
         setModalData={setModalData}
-        type={modalType}
+        modalType={modalType}
         setModalType={setModalType}
         modalAction={modalAction}
         setModalAction={setModalAction}

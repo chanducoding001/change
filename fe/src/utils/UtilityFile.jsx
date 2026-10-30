@@ -41,52 +41,64 @@ export const sidebarContent = [
   },
   {
     roles:[ROLES.ADMIN],
+    title:'Create a Book',
+    icon:<CreateNewFolderIcon/>,
+    locationToTravel:navigationLocations?.CREATEBOOK
+  },
+  {
+    roles:[ROLES.ADMIN],
     title:'Create Data',
     icon:<CreateIcon/>,
     locationToTravel:navigationLocations?.CREATEDATA
   },
-  // {
-  //   roles:[ROLES.ADMIN],
-  //   title:'Upload Census Data',
-  //   icon:<UploadFileIcon/>,
-  //   locationToTravel:navigationLocations?.UPLOADCSVDATA
-  // },
+  {
+    roles:[ROLES.ADMIN],
+    title:'List of Books',
+    icon:<ListIcon/>,
+    locationToTravel:navigationLocations?.LISTOFBOOKS
+  },
+  {
+    roles:[ROLES.ADMIN],
+    title:'Upload Census Data',
+    icon:<UploadFileIcon/>,
+    locationToTravel:navigationLocations?.UPLOADCSVDATA
+  },
   {
     roles:[ROLES.ADMIN],
     title:'Personal Works',
     icon:<AssuredWorkloadIcon/>,
     locationToTravel:navigationLocations?.ALLPERSONALWORKSLIST
   },
-  // {
-  //   roles:[ROLES.ADMIN],
-  //   title:'World Map',
-  //   icon:<ExploreIcon/>,
-  //   locationToTravel:navigationLocations?.WORLDMAP
-  // },
-  // {
-  //   roles:[ROLES.ADMIN],
-  //   title:'Display Census Data',
-  //   icon:<TvIcon/>,
-  //   locationToTravel:navigationLocations?.DISPLAYCENSUS
-  // },
-  // {
-  //   roles:[ROLES.ADMIN],
-  //   title:'Display State LGD Data',
-  //   icon:<TvIcon/>,
-  //   locationToTravel:navigationLocations?.DISPLAYSTATELGD
-  // },
-  // {
-  //   roles:[ROLES.ADMIN],
-  //   title:'Add Tour',
-  //   icon:<ExploreIcon/>,
-  //   locationToTravel:navigationLocations?.ADDTOUR
-  // },
-  // {
-  //   roles:[ROLES.ADMIN],
-  //   title:'List of Tours',
-  //   icon:<ExploreIcon/>,
-  //   locationToTravel:navigationLocations?.TOURSLIST
-  // },
+  {
+    roles:[ROLES.ADMIN],
+    title:'World Map',
+    icon:<ExploreIcon/>,
+    locationToTravel:navigationLocations?.WORLDMAP
+  },
+  {
+    roles:[ROLES.ADMIN],
+    title:'Display Census Data',
+    icon:<TvIcon/>,
+    locationToTravel:navigationLocations?.DISPLAYCENSUS
+  },
+  {
+    roles:[ROLES.ADMIN],
+    title:'Display State LGD Data',
+    icon:<TvIcon/>,
+    locationToTravel:navigationLocations?.DISPLAYSTATELGD
+  },
+  {
+    roles:[ROLES.ADMIN],
+    title:'Add Tour',
+    icon:<ExploreIcon/>,
+    locationToTravel:navigationLocations?.ADDTOUR
+  },
+  {
+    roles:[ROLES.ADMIN],
+    title:'List of Tours',
+    icon:<ExploreIcon/>,
+    locationToTravel:navigationLocations?.TOURSLIST
+  },
   {
     roles:[ROLES.ADMIN],
     title:'Dashboards list',

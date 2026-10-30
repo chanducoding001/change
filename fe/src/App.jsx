@@ -36,6 +36,9 @@ import CreateTour from "./pages/admin/add_tour/CreateTour";
 import ListOfTours from "./pages/admin/add_tour/ListOfTours";
 import AddPlaceInTour from "./pages/admin/add_tour/AddPlaceInTour";
 import VisitTour from "./pages/admin/add_tour/visitTour/VisitTour";
+import ListOfBooks from "./pages/admin/ListOfBooks";
+import CreateABook from "./pages/admin/CreateABook";
+import DisplayTheBook from "./pages/admin/DisplayTheBook";
 // import AddTour from "./pages/admin/GIS_MAP/AddTour";
 
 const App = () => {
@@ -136,6 +139,17 @@ useEffect(() => {
               path={navigationLocations?.CREATEDATA}
               element={<CreateInfoWork />}
             />
+            <Route
+              path={navigationLocations?.CREATEBOOK}
+              element={<CreateABook />}
+            />
+            <Route
+              path={navigationLocations?.LISTOFBOOKS}
+              element={<ListOfBooks />}
+            />
+            <Route
+              path={navigationLocations?.DISPLAYTHEBOOK}
+              element={<DisplayTheBook />} /> 
             <Route
               path={navigationLocations?.UPLOADCSVDATA}
               element={<UploadCsvData />}

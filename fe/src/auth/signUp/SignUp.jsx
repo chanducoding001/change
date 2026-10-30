@@ -376,7 +376,8 @@ export const inputStyle = {
   "& .MuiOutlinedInput-root": {
     "& fieldset": { borderColor: "rgba(255,255,255,0.3)" },
     "&:hover fieldset": { borderColor: "rgba(255,255,255,0.6)" },
-    "&.Mui-focused fieldset": { borderColor: "#00c6ff" }
+    "&.Mui-focused fieldset": { borderColor: "#00c6ff" },
+    "& textarea": { color: "white" }
   }
 };
 

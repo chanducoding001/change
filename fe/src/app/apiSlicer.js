@@ -1,20 +1,25 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { loadingStates, requestStates, handleApiCases } from "./appUtils";
 import {
+  allBooksApi,
   allInformationsApi,
   allPersonalWorkApi,
   allUsersApi,
   allWorkApi,
   changePasswordApi,
+  createBookApi,
+  createChapterApi,
   createDashboardApi,
   createInformationApi,
   createPersonalWorkApi,
   createWorkApi,
+  deleteChapterInBookApi,
   deleteDashboardApi,
   deleteInformationApi,
   deletePersonalWorkApi,
   deleteWorkApi,
   getAllDashboardsApi,
+  getBookByIdApi,
   getCensusAllStatesApi,
   getCensusDistrictsByStateApi,
   getCensusStateApi,
@@ -28,6 +33,7 @@ import {
   getStateLGDVillagesByStateDistSubDistApi,
   getUserMainDashboardApi,
   loginApi,
+  modifyChapterInBookApi,
   modifyDashboardApi,
   modifyInformationApi,
   modifyPersonalWorkApi,
@@ -97,6 +103,14 @@ const initialState = {
   updateInformation: requestStates,
   deleteInformation: requestStates,
 
+  createBook: requestStates,
+  createChapter: requestStates,
+  allBooks: requestStates,
+  getBookById: requestStates,
+  modifyChapterById: requestStates,
+  deleteChapterById: requestStates,
+
+  fetchedBooks:[],
   userProfile: {},
 
   censusDataStateOptions:censusStateOptions,
@@ -278,7 +292,42 @@ const apiSlicer = createSlice({
         state.getAllDashboards.data.data || []
       ).filter((item) => item._id !== id);
     },
+    insertTheBookInFetchedBooks:(state,action)=>{
+      const fetchedBook = action.payload;
+      state.fetchedBooks.push(fetchedBook);
+    },
+    updateChapterInFetchedBooks: (state, action) => {
+      const { bookId, chapterId, title, content } = action.payload;
+
+      const updatingBook = state.fetchedBooks.find(
+        (book) => book.bookId === bookId
+      );
+    
+      if (!updatingBook) return;
+    
+      const updatingChapter = updatingBook.chapters.find(
+        (chapter) => chapter.chapterId === chapterId
+      );
+    
+      if (!updatingChapter) return;
+    
+      updatingChapter.title = title;
+      updatingChapter.content = content;
+},
+  deleteChapterInFetchedBooks: (state, action) => {
+    const { bookId, chapterId } = action.payload;
+
+    const updatingBook = state.fetchedBooks.find(
+      (book) => book.bookId === bookId
+    );
+
+    if (!updatingBook) return;
+
+    updatingBook.chapters = updatingBook.chapters.filter(
+      (chapter) => chapter.chapterId !== chapterId
+    );
   },
+},
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
@@ -319,6 +368,13 @@ const apiSlicer = createSlice({
     handleApiCases(builder, modifyWorkApi, "updateWork");
     handleApiCases(builder, deleteWorkApi, "deleteWork");
 
+    handleApiCases(builder, createBookApi, "createBook");
+    handleApiCases(builder, allBooksApi, "allBooks");
+    handleApiCases(builder, createChapterApi, "createChapter");
+    handleApiCases(builder, getBookByIdApi, "getBookById");
+    handleApiCases(builder, modifyChapterInBookApi, "modifyChapterById");
+    handleApiCases(builder, deleteChapterInBookApi, "deleteChapterById");
+
     handleApiCases(builder, createPersonalWorkApi, "createPersonalWork");
     handleApiCases(builder, allPersonalWorkApi, "allPersonalWorks");
     handleApiCases(builder, modifyPersonalWorkApi, "updatePersonalWork");
@@ -354,4 +410,8 @@ export const {
   updateOneInAllDashboards,
   updateMainDashboard,
   deleteOneInAllDashboards,
+
+  insertTheBookInFetchedBooks,
+  updateChapterInFetchedBooks,
+  deleteChapterInFetchedBooks
 } = apiSlicer.actions;

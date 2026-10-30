@@ -1,13 +1,18 @@
 import { Box, Button } from '@mui/material';
-import React from 'react'
+import React, { useEffect } from 'react';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
 import ReusableEditorTinyMce from '../../reusables/ReusableEditorTinyMce';
 import { useState } from 'react';
 import { BASE_URL, localUser } from '../../utils/utils';
-import { useDispatch } from 'react-redux';
-import { createDashboardApi, createInformationApi, createPersonalWorkApi, createWorkApi } from '../../app/thunkApiCalls';
+import { useDispatch, useSelector } from 'react-redux';
+import { allBooksApi, createChapterApi, createDashboardApi, createInformationApi, createPersonalWorkApi, createWorkApi } from '../../app/thunkApiCalls';
 import { pushIntoAllDashboards, pushIntoAllInfo, pushIntoAllPersonalWorks, pushIntoAllWorks, updateOneInAllWorks } from '../../app/apiSlicer';
 import UniversalModal from '../../features/UniversalModal';
 import useModal from '../../reusables/useModal';
+import { loadingStates } from '../../app/appUtils';
 
 export const callKeys = {
     INFO:'information',
@@ -15,7 +20,8 @@ export const callKeys = {
     PERSONALWORK:'personalWork',
     ADMINDASHBOARD:'admin',
     USERDASHBOARD:'user',
-    DASHBOARD:'dashboard'
+    DASHBOARD:'dashboard',
+    BOOK:'book',
 }
 export const createInfoWorkBtnStyles = {
         color: "#fff",
@@ -54,12 +60,44 @@ const CreateInfoWork = () => {
     setModalType,
     setModalNavigation,
   } = useModal();
+  const [bookName, setBookName] = useState("");
+  const allBooksState = useSelector((state) => state.apiSlicer.allBooks);
+  const allBooksLoading = allBooksState?.loading;
+  const allBooksData = allBooksState?.data?.data || [];
 
-  const handleSave= async(callKey)=>{
-    const responsiveContent = content.replace(
+  const fetchAllBooks = async () => {
+    try {
+      const result = await dispatch(
+        allBooksApi({
+          url: `${import.meta.env.VITE_GET_ALL_BOOKS}`,
+        })
+      );
+      if(allBooksApi.fulfilled.match(result)){
+        console.log("Fetched all books successfully:", result.payload);
+      }else if(allBooksApi.rejected.match(result)){
+        console.log(result.payload);
+        
+      }
+    } catch (error) {
+      console.error("Error fetching all books:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Fetch all books from the backend
+    if(allBooksLoading === loadingStates.IDLE){
+      fetchAllBooks();
+    }
+  }, []);
+const responsiveContent = content.replace(
   /<img([^>]*)>/g,
   '<img$1 style="max-width:100%;height:auto;" />'
 );
+  const handleSave= async(callKey)=>{
+//     const responsiveContent = content.replace(
+//   /<img([^>]*)>/g,
+//   '<img$1 style="max-width:100%;height:auto;" />'
+// );
     try {
       if(callKey===callKeys.INFO){
       const infoResult = await dispatch(createInformationApi({
@@ -134,10 +172,49 @@ const CreateInfoWork = () => {
       setShowModal(true);
     }
   }
+  const handleChapterSave = async (callKey, bookId, obj)=>{
+    console.log('chapter has clicked',bookId);
+    
+    if(!bookId){
+      setModalData({title:'Failed',content:'Please select a book before saving the chapter!'});
+      setModalType('error');
+      setShowModal(true);
+      return;
+    }
+    if(callKey===callKeys.BOOK){
+      console.log('Saving chapter for bookId:', bookId);
+      try {
+        console.log("hitting try block");
+        const chapterResult = await dispatch(createChapterApi({
+          url:`${import.meta.env.VITE_CREATE_CHAPTER}`,
+          data:{title,content:responsiveContent,bookId,bookName:obj?.bookName}
+        }));
+        if(createChapterApi.fulfilled.match(chapterResult)){
+          setModalData({title:'Success',content:'Chapter created successfully!'});
+          setModalType('success');
+          handleReset();
+        }else if(createChapterApi.rejected.match(chapterResult)){
+          console.log("hitting catch block");
+          setModalData({title:'Failed',content:chapterResult.payload});
+          setModalType('error');
+        }  
+        setShowModal(true);
+    }catch (error) {
+      console.log("hitting catch block error",error);
+      setModalData({title:'Failed',content:error.message});
+      setModalType('error');
+      setShowModal(true);
+    }
+    }
+}
 function handleReset(){
         setTitle("");
         setContent("");
+        setBookName("");
       };
+      function handleChange(value) {
+        setBookName(value);
+      }
   return (
     <>
     {/* CreateInfoWork */}
@@ -214,13 +291,103 @@ function handleReset(){
       {btn.label}
     </Button>
   ))}
+
+  <Box sx={{ minWidth: 500 }}>
+  <FormControl fullWidth>
+    <InputLabel
+      id="book-name-label"
+      sx={{
+        color: "rgba(255,255,255,0.8)",
+        "&.Mui-focused": {
+          color: "white",
+        },
+      }}
+    >
+      Book Name
+    </InputLabel>
+
+    <Select
+      labelId="book-name-label"
+      id="book-name-select"
+      value={bookName}
+      label="Book Name"
+      onChange={(event) => handleChange(event.target.value)}
+      sx={{
+        color: "white",
+        borderRadius: 2,
+        background: "rgba(255,255,255,0.08)",
+
+        "& .MuiOutlinedInput-notchedOutline": {
+          borderColor: "rgba(255,255,255,0.5)",
+        },
+
+        "&:hover .MuiOutlinedInput-notchedOutline": {
+          borderColor: "rgba(255,255,255,0.9)",
+        },
+
+        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+          borderColor: "#00c6ff",
+        },
+
+        "& .MuiSvgIcon-root": {
+          color: "white",
+        },
+      }}
+      MenuProps={{
+        PaperProps: {
+          sx: {
+            background: "#073b75",
+            color: "white",
+            "& .MuiMenuItem-root:hover": {
+              background: "rgba(0,198,255,0.2)",
+            },
+            "& .MuiMenuItem-root.Mui-selected": {
+              background: "rgba(0,198,255,0.3)",
+            },
+          },
+        },
+      }}
+    >
+      {/* <MenuItem value={10}>Ten</MenuItem>
+      <MenuItem value={20}>Twenty</MenuItem>
+      <MenuItem value={30}>Thirty</MenuItem> */}
+      {
+        allBooksData.map((book) => (
+          <MenuItem
+            key={book.bookId}
+            value={book.bookId}
+            onClick={() => handleChapterSave(callKeys?.BOOK, book.bookId, { bookName: book.bookName })}
+          >
+            {book.bookName}
+          </MenuItem>
+        ))
+      }
+    </Select>
+  </FormControl>
+</Box>
+  {/* <Box sx={{ minWidth: 120 }}>
+      <FormControl fullWidth>
+        <InputLabel id="demo-simple-select-label">Book Name</InputLabel>
+        <Select
+          labelId="demo-simple-select-label"
+          id="demo-simple-select"
+          value={bookName}
+          label="Book Name"
+          onChange={(event) => handleChange(event.target.value)}
+        >
+          <MenuItem value={10}>Ten</MenuItem>
+          <MenuItem value={20}>Twenty</MenuItem>
+          <MenuItem value={30}>Thirty</MenuItem>
+        </Select>
+      </FormControl>
+    </Box> */}
 </Box>
     <UniversalModal
     showModal={showModal}
     setShowModal={setShowModal}
     modalData={modalData}
     setModalData={setModalData}
-    type={modalType}
+    modalType={modalType}
     setModalType={setModalType}
     navigateLocation={modalNavigation}
     />

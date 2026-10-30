@@ -114,6 +114,12 @@ app.use(
   profileRoutes
 );
 
+app.use(
+  process.env.CREATE_BOOK_MAIN_URL || "/api/book",
+  verifyToken,
+  require("./routes/bookRoutes")
+);
+
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({
