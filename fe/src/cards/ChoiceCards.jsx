@@ -133,7 +133,7 @@ export default function ChoiceCards() {
                 lineHeight: 1.6,
               }}
             >
-              {c.text} edit
+              {c.text}
             </Typography>
           </Card>
         ))}

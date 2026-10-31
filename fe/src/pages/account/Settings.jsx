@@ -288,7 +288,7 @@ const Settings = () => {
     setShowModal={setShowModal}
     modalData={modalData}
     setModalData={setModalData}
-    type={modalType}
+    modalType={modalType}
     setModalType={setModalType}
     navigateLocation={modalNavigation}
     />
