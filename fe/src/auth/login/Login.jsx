@@ -94,7 +94,7 @@ const Login = () => {
 
         resetForm();
       }else if(loginApi.rejected.match(loginResult)){
-        console.log('error',loginResult.payload);
+        // console.log('error',loginResult.payload);
         
         setModalData({
           title: "Login Failed",

@@ -312,9 +312,9 @@ const uploadCsvController = async (
       1024
     ).toFixed(2);
 
-    console.log(
-      `Document Size: ${sizeMB} MB`
-    );
+    // console.log(
+    //   `Document Size: ${sizeMB} MB`
+    // );
 
     if (size >
         16 * 1024 * 1024) {

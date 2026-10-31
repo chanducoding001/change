@@ -47,7 +47,7 @@ const mapSlicer = createSlice({
     },
     addPlaceInTour: (state, action) => {
       const updatedTour = action.payload;
-      console.log("inside add place", { updatedTour });
+      // console.log("inside add place", { updatedTour });
 
       const index = state.allTours.findIndex(
         (tour) => tour._id === updatedTour._id,

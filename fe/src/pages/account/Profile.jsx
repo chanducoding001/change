@@ -27,7 +27,7 @@ const Profile = () => {
   // console.log(userProfileDetails);
   
   const handleEditProfile = () => {
-    console.log("Edit Profile");
+    // console.log("Edit Profile");
     navigate(
   navigationLocations.EDITPROFILE.replace(":id", id)
 );

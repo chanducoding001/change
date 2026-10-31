@@ -13,11 +13,13 @@ import {
   createInformationApi,
   createPersonalWorkApi,
   createWorkApi,
+  deleteBookApi,
   deleteChapterInBookApi,
   deleteDashboardApi,
   deleteInformationApi,
   deletePersonalWorkApi,
   deleteWorkApi,
+  editBookApi,
   getAllDashboardsApi,
   getBookByIdApi,
   getCensusAllStatesApi,
@@ -104,12 +106,15 @@ const initialState = {
   deleteInformation: requestStates,
 
   createBook: requestStates,
+  editBook: requestStates,
+  deleteBook: requestStates,
   createChapter: requestStates,
   allBooks: requestStates,
   getBookById: requestStates,
   modifyChapterById: requestStates,
   deleteChapterById: requestStates,
 
+  allListedBooks:[],
   fetchedBooks:[],
   userProfile: {},
 
@@ -327,6 +332,36 @@ const apiSlicer = createSlice({
       (chapter) => chapter.chapterId !== chapterId
     );
   },
+  pushIntoAllBooks: (state, action) => {
+  const incomingBooks = Array.isArray(action.payload)
+    ? action.payload
+    : [action.payload];
+
+  incomingBooks.forEach((newBook) => {
+    const isAlreadyExists = state.allListedBooks.some(
+      (book) => book.bookId === newBook.bookId
+    );
+
+    if (!isAlreadyExists) {
+      state.allListedBooks.push(newBook);
+    }
+  });
+},
+  modifyEditedBook: (state, action) => {
+    const { bookId, bookName, aboutBook } = action.payload;
+    
+    const existingBook = state.allListedBooks.find(
+      (book) => book.bookId === bookId
+    );
+  
+    if (existingBook) {
+      existingBook.bookName = bookName;
+      existingBook.aboutBook = aboutBook;
+    }
+  },
+  deleteTheBook:(state,action)=>{
+    state.allListedBooks = state.allListedBooks.filter((book)=>book.bookId!==action.payload)
+  }
 },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -369,6 +404,8 @@ const apiSlicer = createSlice({
     handleApiCases(builder, deleteWorkApi, "deleteWork");
 
     handleApiCases(builder, createBookApi, "createBook");
+    handleApiCases(builder, editBookApi, "editBook");
+    handleApiCases(builder, deleteBookApi, "deleteBook");
     handleApiCases(builder, allBooksApi, "allBooks");
     handleApiCases(builder, createChapterApi, "createChapter");
     handleApiCases(builder, getBookByIdApi, "getBookById");
@@ -413,5 +450,8 @@ export const {
 
   insertTheBookInFetchedBooks,
   updateChapterInFetchedBooks,
-  deleteChapterInFetchedBooks
+  deleteChapterInFetchedBooks,
+  modifyEditedBook,
+  deleteTheBook,
+  pushIntoAllBooks
 } = apiSlicer.actions;

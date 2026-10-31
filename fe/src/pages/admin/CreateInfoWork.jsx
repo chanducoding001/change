@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { BASE_URL, localUser } from '../../utils/utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { allBooksApi, createChapterApi, createDashboardApi, createInformationApi, createPersonalWorkApi, createWorkApi } from '../../app/thunkApiCalls';
-import { pushIntoAllDashboards, pushIntoAllInfo, pushIntoAllPersonalWorks, pushIntoAllWorks, updateOneInAllWorks } from '../../app/apiSlicer';
+import { pushIntoAllBooks, pushIntoAllDashboards, pushIntoAllInfo, pushIntoAllPersonalWorks, pushIntoAllWorks, updateOneInAllWorks } from '../../app/apiSlicer';
 import UniversalModal from '../../features/UniversalModal';
 import useModal from '../../reusables/useModal';
 import { loadingStates } from '../../app/appUtils';
@@ -58,7 +58,6 @@ const CreateInfoWork = () => {
     setShowModal,
     setModalData,
     setModalType,
-    setModalNavigation,
   } = useModal();
   const [bookName, setBookName] = useState("");
   const allBooksState = useSelector((state) => state.apiSlicer.allBooks);
@@ -73,7 +72,9 @@ const CreateInfoWork = () => {
         })
       );
       if(allBooksApi.fulfilled.match(result)){
-        console.log("Fetched all books successfully:", result.payload);
+        // console.log("Fetched all books successfully:", result.payload);
+        const fetchedBooks = result.payload?.data;
+        dispatch(pushIntoAllBooks(fetchedBooks));
       }else if(allBooksApi.rejected.match(result)){
         console.log(result.payload);
         
@@ -85,14 +86,14 @@ const CreateInfoWork = () => {
 
   useEffect(() => {
     // Fetch all books from the backend
-    if(allBooksLoading === loadingStates.IDLE){
-      fetchAllBooks();
-    }
-  }, []);
-const responsiveContent = content.replace(
-  /<img([^>]*)>/g,
-  '<img$1 style="max-width:100%;height:auto;" />'
-);
+    fetchAllBooks();
+    // if(allBooksLoading === loadingStates.IDLE){
+    // }
+  }, [dispatch]);
+  const responsiveContent = content.replace(
+    /<img([^>]*)>/g,
+    '<img$1 style="max-width:100%;height:auto;" />'
+  );
   const handleSave= async(callKey)=>{
 //     const responsiveContent = content.replace(
 //   /<img([^>]*)>/g,
@@ -173,7 +174,7 @@ const responsiveContent = content.replace(
     }
   }
   const handleChapterSave = async (callKey, bookId, obj)=>{
-    console.log('chapter has clicked',bookId);
+    // console.log('chapter has clicked',bookId);
     
     if(!bookId){
       setModalData({title:'Failed',content:'Please select a book before saving the chapter!'});
@@ -182,9 +183,9 @@ const responsiveContent = content.replace(
       return;
     }
     if(callKey===callKeys.BOOK){
-      console.log('Saving chapter for bookId:', bookId);
+      // console.log('Saving chapter for bookId:', bookId);
       try {
-        console.log("hitting try block");
+        // console.log("hitting try block");
         const chapterResult = await dispatch(createChapterApi({
           url:`${import.meta.env.VITE_CREATE_CHAPTER}`,
           data:{title,content:responsiveContent,bookId,bookName:obj?.bookName}
@@ -194,19 +195,19 @@ const responsiveContent = content.replace(
           setModalType('success');
           handleReset();
         }else if(createChapterApi.rejected.match(chapterResult)){
-          console.log("hitting catch block");
+          // console.log("hitting catch block");
           setModalData({title:'Failed',content:chapterResult.payload});
           setModalType('error');
         }  
         setShowModal(true);
     }catch (error) {
-      console.log("hitting catch block error",error);
+      // console.log("hitting catch block error",error);
       setModalData({title:'Failed',content:error.message});
       setModalType('error');
       setShowModal(true);
     }
     }
-}
+  }
 function handleReset(){
         setTitle("");
         setContent("");
@@ -348,9 +349,7 @@ function handleReset(){
         },
       }}
     >
-      {/* <MenuItem value={10}>Ten</MenuItem>
-      <MenuItem value={20}>Twenty</MenuItem>
-      <MenuItem value={30}>Thirty</MenuItem> */}
+
       {
         allBooksData.map((book) => (
           <MenuItem

@@ -336,7 +336,7 @@ const handleSave = async () => {
         }
         setParentModalData({
           title: "Success!",
-          content: `${type} deleted successfully`,
+          content: `${type===callKeys.BOOK?'Chapter':type} deleted successfully`,
         });
 
         setParentModalType("success");
@@ -363,7 +363,7 @@ const handleSave = async () => {
   const handleInitialDeleteClick = async () => {
     setModalData({
       title: "Delete?",
-      content: `Are You sure You want to delete this ${type}?`,
+      content: `Are You sure You want to delete this ${type===callKeys.BOOK?'Chapter':type}`,
     });
     setModalType("error");
     setModalAction("delete");

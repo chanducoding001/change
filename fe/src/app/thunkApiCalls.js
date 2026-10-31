@@ -78,6 +78,8 @@ export const modifyPersonalWorkApi = createApiThunk("Modify personal work","PUT"
 export const deletePersonalWorkApi = createApiThunk("Delete personal work","DELETE");
 
 export const createBookApi = createApiThunk("Create Book","POST");
+export const editBookApi = createApiThunk("Edit Book","PUT");
+export const deleteBookApi = createApiThunk("Delete Book","DELETE");
 export const createChapterApi = createApiThunk("Create Chapter","POST");
 export const allBooksApi = createApiThunk("Get all Books","GET");
 export const getBookByIdApi = createApiThunk("Get Book by ID","GET");

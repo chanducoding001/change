@@ -132,6 +132,7 @@ export const navigationLocations = {
   SIGNUP:'/signup',
   CONTRIBUTERS:'/admin/contributers',
   CREATEBOOK:'/admin/create-book',
+  EDITBOOK:'/admin/edit-book/:editingBookDetails',
   LISTOFBOOKS:'/admin/list-of-books',
   DISPLAYTHEBOOK:'/admin/display-the-book/:bookId',
   UPLOADCSVDATA:'/admin/uploadCSVData',

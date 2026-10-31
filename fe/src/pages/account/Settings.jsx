@@ -55,7 +55,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { id } = userProfileDetails;
 
-  console.log("inside settings",{id,userProfileDetails});
+  // console.log("inside settings",{id,userProfileDetails});
   
   // ---------------- INPUT ----------------
   const handleInputChange = (e) => {

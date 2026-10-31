@@ -38,6 +38,115 @@ const createBook = async (req, res) => {
 };
 
 
+const editBook = async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const { bookName, aboutBook } = req.body;
+
+    // Validate book ID
+    if (!bookId) {
+      return res.status(400).json({
+        success: false,
+        message: "Book ID is required",
+      });
+    }
+
+    // Validate request body
+    if (
+      typeof bookName !== "string" ||
+      !bookName.trim() ||
+      typeof aboutBook !== "string" ||
+      !aboutBook.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Book name and About book are required",
+      });
+    }
+
+    // Find and update book
+    const updatedBook = await Book.findOneAndUpdate(
+      { bookId },
+      {
+        $set: {
+          bookName: bookName.trim(),
+          aboutBook: aboutBook.trim(),
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    // Check whether book exists
+    if (!updatedBook) {
+      return res.status(404).json({
+        success: false,
+        message: "Book not found",
+      });
+    }
+
+    // Success response
+    return res.status(200).json({
+      success: true,
+      message: "Book modified successfully!",
+      data: updatedBook,
+    });
+
+  } catch (error) {
+    console.error("Error updating book:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+};
+
+const deleteBook = async (req, res) => {
+  try {
+    const { bookId } = req.params;
+
+    // 1. Validate book ID
+    if (!bookId || typeof bookId !== "string" || !bookId.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid Book ID is required",
+      });
+    }
+
+    // 2. Find and delete book using custom UUID
+    const deletedBook = await Book.findOneAndDelete({
+      bookId: bookId.trim(),
+    });
+
+    // 3. Check whether book exists
+    if (!deletedBook) {
+      return res.status(404).json({
+        success: false,
+        message: "Book not found",
+      });
+    }
+
+    // 4. Return success response
+    return res.status(200).json({
+      success: true,
+      message: "Book deleted successfully!",
+      data: deletedBook,
+    });
+
+  } catch (error) {
+    console.error("Error deleting book:", error);
+
+    // 5. Handle unexpected errors
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
 const getAllBooks = async (req, res) => {
   try {
     const books = await Book.find()
@@ -208,4 +317,4 @@ return res.status(500).json({
 
 }
 };
-module.exports = { createBook, getAllBooks, getBookById, modifyChapterInBook, deleteChapterInBook };
+module.exports = { createBook, getAllBooks, getBookById, modifyChapterInBook, deleteChapterInBook, editBook, deleteBook };

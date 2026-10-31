@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./auth/login/Login";
 import SignUp from "./auth/signUp/SignUp";
@@ -23,7 +23,6 @@ import { useDispatch } from "react-redux";
 import { getProfileApi } from "./app/thunkApiCalls";
 import { setUser } from "./app/apiSlicer";
 import EditProfile from "./pages/account/EditProfile";
-import PublicLayout from "./pages/common/PublicLayout";
 import DashboardList from "./pages/admin/DashboardList";
 import UnAuthorized from "./pages/common/UnAuthorized";
 import IdlePage from "./pages/admin/IdlePage";
@@ -39,7 +38,7 @@ import VisitTour from "./pages/admin/add_tour/visitTour/VisitTour";
 import ListOfBooks from "./pages/admin/ListOfBooks";
 import CreateABook from "./pages/admin/CreateABook";
 import DisplayTheBook from "./pages/admin/DisplayTheBook";
-// import AddTour from "./pages/admin/GIS_MAP/AddTour";
+import EditTheBook from "./pages/admin/EditTheBook";
 
 const App = () => {
 
@@ -91,7 +90,7 @@ useEffect(() => {
           path={navigationLocations?.UNAUTHORIZED}
           element={<UnAuthorized />}
         />
-
+{/* as you need to deal with roles, urls are taken in navigationLocations instead of .env */}
         {/* Admin Routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route element={<LayoutFile />}>
@@ -142,6 +141,10 @@ useEffect(() => {
             <Route
               path={navigationLocations?.CREATEBOOK}
               element={<CreateABook />}
+            />
+            <Route
+              path={navigationLocations?.EDITBOOK}
+              element={<EditTheBook />}
             />
             <Route
               path={navigationLocations?.LISTOFBOOKS}

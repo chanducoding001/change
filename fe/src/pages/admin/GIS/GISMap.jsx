@@ -96,7 +96,7 @@ const GISMap = (props) => {
 
       const res = await axios.get(url);
 
-      console.log("Route data:", res.data.routes[0].geometry);
+      // console.log("Route data:", res.data.routes[0].geometry);
       setRoute(res.data.routes[0].geometry);
     }
 

@@ -8,6 +8,7 @@ import useModal from '../../reusables/useModal';
 import UniversalModal from '../../features/UniversalModal';
 import ReusableStackAccordion from '../../reusables/ReusableStackAccordion';
 import { Box, Button } from '@mui/material';
+import NavigateBackComponent from '../../reusables/NavigateBackComponent';
 
 const DisplayTheBook = (props) => {
     const { showModal, modalData, modalType, setShowModal, setModalData, setModalType } = useModal();
@@ -67,23 +68,7 @@ const DisplayTheBook = (props) => {
     // console.log("displayingBook", displayingBook);
   return (
     <>
-        <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%",marginBottom:'10px' }}>
-            <Button
-              variant="outlined"
-              onClick={() => navigate(-1)}
-              sx={{
-                px: 4,
-                py: 1.2,
-                borderRadius: 3,
-                textTransform: "none",
-                fontWeight: 600,
-                color: "white",
-                borderColor: "white",
-              }}
-            >
-              Navigate to all books
-            </Button>
-        </Box>
+        <NavigateBackComponent btnText="Navigate to all books"/>
         {displayingBook?.chapters?.map ((chapter) => (
             <ReusableStackAccordion
                 key={chapter?.chapterId}
@@ -117,3 +102,20 @@ const DisplayTheBook = (props) => {
 
 export default DisplayTheBook;
 
+{/* <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%",marginBottom:'10px' }}>
+            <Button
+              variant="outlined"
+              onClick={() => navigate(-1)}
+              sx={{
+                px: 4,
+                py: 1.2,
+                borderRadius: 3,
+                textTransform: "none",
+                fontWeight: 600,
+                color: "white",
+                borderColor: "white",
+              }}
+            >
+              Navigate to all books
+            </Button>
+</Box> */}
